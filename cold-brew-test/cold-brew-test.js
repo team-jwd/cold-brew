@@ -4,27 +4,34 @@ const selenium = require('selenium-webdriver');
 // how many peer connections there are, so that the window can
 // capture the events for several peer connections
 
-module.exports = function() {
-  let coldBrewClient = new selenium.Builder()
+module.exports = function coldBrewClient() {
+  let client = new selenium.Builder()
     .usingServer()
     .withCapabilities({
       browserName: 'chrome'
     })
     .build()
 
-  coldBrewClient.untilRTCEvents = function(events) {
-    return coldBrewClient.executeScript(function(evts) {
-      return evts.map(windowHasEvent).every();
+  client.untilRTCEvents = function(events) {
+    return function() {
+      return client.executeScript(function(evts) {
+        return evts.every(windowHasEvent);
 
-      function windowHasEvent(eventName) {
-        for (let i = 0; i < window.RTCEvents.length; i++) {
-          if(window.RTCEvents[j].type === eventName) return true;
+        function windowHasEvent(eventName) {
+          if (!window.RTCEvents) return false;
+
+          for (let i = 0; i < window.RTCEvents.length; i++) {
+            console.log('checking event', eventName);
+            if(window.RTCEvents[i].type === eventName) {
+              return true;
+            }
+          }
+
+          return false;
         }
-
-        return false;
-      }
-    }, events);
+      }, events);
+    }
   };
 
-  return coldBrewClient;
+  return client;
 }
