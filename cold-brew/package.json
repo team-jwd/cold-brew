@@ -1,0 +1,21 @@
+{
+  "name": "cold-brew",
+  "version": "1.0.1",
+  "description": "A testing module for TDD with apps that use the RTCPeerConnection API",
+  "main": "cold-brew-test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "testing",
+    "TDD",
+    "WebRTC",
+    "RTCPeerConnection",
+    "selenium"
+  ],
+  "author": "Team JWD",
+  "license": "ISC",
+  "dependencies": {
+    "selenium-webdriver": "^3.0.0-beta-3"
+  }
+}
