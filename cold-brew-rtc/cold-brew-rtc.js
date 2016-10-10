@@ -4,7 +4,7 @@ if (window.RTCEvents) throw new Error(
 
 window.RTCEvents = [];
 
-export const RTC_PEER_CONNECTION_EVENTS = [
+const RTC_PEER_CONNECTION_EVENTS = [
   'addstream',
   'connectionstatechange',
   'datachannel',
@@ -21,7 +21,7 @@ export const RTC_PEER_CONNECTION_EVENTS = [
   'track',
 ]
 
-export function coldBrewRTC(servers, options, listeners = RTC_PEER_CONNECTION_EVENTS) {
+function coldBrewRTC(servers, options, listeners = RTC_PEER_CONNECTION_EVENTS) {
   const valid = listeners.every(listener =>
     RTC_PEER_CONNECTION_EVENTS.includes(listener)
   );
@@ -40,3 +40,5 @@ export function coldBrewRTC(servers, options, listeners = RTC_PEER_CONNECTION_EV
 
   return peerConnection;
 }
+
+module.exports = { coldBrewRTC, RTC_PEER_CONNECTION_EVENTS };
