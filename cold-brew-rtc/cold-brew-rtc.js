@@ -34,7 +34,7 @@ function coldBrewRTC(servers, options, listeners = RTC_PEER_CONNECTION_EVENTS) {
 
   listeners.forEach((listener) => {
     peerConnection.addEventListener(listener, function(event) {
-      window.RTCevents.push(event);
+      window.RTCEvents.push(event);
     });
   });
 
