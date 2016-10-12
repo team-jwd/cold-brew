@@ -1,6 +1,6 @@
 {
   "name": "cold-brew-rtc",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Enhances the functionality of the RTCPeerConnection API to enable the usage of the cold-brew tesing module.",
   "main": "cold-brew-rtc.js",
   "scripts": {
