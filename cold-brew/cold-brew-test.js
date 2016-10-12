@@ -21,7 +21,6 @@ function createClient() {
 }
 
 
-
 /**
  * addColdBrewMethods - Attaches the coldBrew methods to a webdriver instance,
  * which will allow it to listen for RTCPeerCOnnection events to occur in the
@@ -103,8 +102,27 @@ function addColdBrewMethods(client) {
 
       return elements[0];
     }, selector, attributes || {}));
-  }
+  };
 
+
+  /**
+   * client - Schedules several navigation tasks at once
+   *
+   * Convenience method to allow the webdriver to more easily
+   * navigate throughout the website
+   *
+   * @param  Array navigationEvents An array of subarrays, each subarray
+   * representing one navigation task. The navigation tasks are of the form
+   * [action, selector, atributes], e.g.
+   * ['click', 'button.login', {innerText: 'Login'}]
+   *
+   * The allowable actions are 'click', and 'sendKeys'. If 'sendKeys' is given,
+   * a fourth element should be included in the array indicating the keys to
+   * be sent, e.g.
+   * ['sendKeys', 'input', {placeholder: 'username'}, 'dking']
+   *
+   * @return undefined
+   */
   client.do = function(navigationEvents) {
     const validInput = navigationEvents.every(event =>
       validNavigation(event));
@@ -119,12 +137,14 @@ function addColdBrewMethods(client) {
 
       client.findElementByAttributes(selector, attributes)[action](keys);
     });
-  }
+  };
+
 
   function validNavigation(navigationEvent) {
     return Array.isArray(navigationEvent) &&
            ['click', 'sendKeys'].includes(navigationEvent[0]);
   }
+
 
   return client;
 }
