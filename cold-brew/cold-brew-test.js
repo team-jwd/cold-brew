@@ -1,4 +1,5 @@
 const selenium = require('selenium-webdriver');
+
 const { By } = selenium;
 
 /**

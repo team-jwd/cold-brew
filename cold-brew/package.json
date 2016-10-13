@@ -1,6 +1,6 @@
 {
   "name": "cold-brew",
-  "version": "1.0.8",
+  "version": "1.0.12",
   "description": "A testing module for TDD with apps that use the RTCPeerConnection API",
   "main": "cold-brew-test.js",
   "scripts": {
@@ -17,6 +17,7 @@
   "author": "Team JWD",
   "license": "ISC",
   "dependencies": {
+    "chromedriver": "^2.24.1",
     "selenium-webdriver": "^3.0.0-beta-3"
   },
   "devDependencies": {
