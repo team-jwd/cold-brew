@@ -36,6 +36,8 @@ const RTC_PEER_CONNECTION_EVENTS = [
  * @return {type}                description
  */
 function coldBrewRTC(servers, options, coldBrewConfig) {
+  coldBrewConfig = coldBrewConfig || {};
+  
   const production = coldBrewConfig.production || false;
   const listeners = coldBrewConfig.listeners || RTC_PEER_CONNECTION_EVENTS;
 
