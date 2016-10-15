@@ -6,9 +6,14 @@ of your WebRTC application.
 ---
 ## <a name="getting-started"></a>Getting Started: the absolute beginner's guide
 This section of the readme is intended for people completely
-new to ColdBrew. If you are familiar with it,
+new to ColdBrew. If you are familiar with the it,
 you may want to view the 
 [API Docs](#docs) instead.
+
+This getting started guide will focus on getting a basic
+test up and running in ColdBrew. To learn about the
+features of ColdBrew that enable testing WebRTC,
+please see the [Getting Started guide, part 2](#getting-started-2).
 
 To learn how to use the ColdBrew API, let's run a super-simple
 test. In your terminal, make a new directory and initialize it with an npm package:
@@ -32,16 +37,15 @@ const coldBrew = require('cold-brew');
 const selenium = require('selenium-webdriver');
 const { until } = selenium;
 
-let client;
+const client = coldBrew.createClient();
 
 describe('ColdBrew client', function() {
   it('should be able to navigate to google.com', function(done) {
     this.timeout(10000);
 
-    client = coldBrew.createClient();
-
     client.get('https://www.google.com');
-    client.wait(until.titleIs('Google')).then(() => done());
+    client.wait(until.titleIs('Google'))
+      .then(() => done());
   });
 
   after(function(done) {
@@ -69,6 +73,46 @@ npm test
 If all goes well, you should see a  Chrome browser window open,
 navigate to google.com, and then close, and mocha should
 report that the test passed in your terminal!
+
+Now, let's try automating some navigation in the browser.
+Add another test case to your `cold-brew-test.js`
+file so that it looks like this:
+```javascript
+const coldBrew = require('cold-brew');
+const { until, Key } = require('selenium-webdriver');
+
+const client = coldBrew.createClient();
+
+describe('ColdBrew client', function () {
+  it('should be able to navigate to google.com', function (done) {
+    this.timeout(10000);
+
+    client.get('https://www.google.com');
+    client.wait(until.titleIs('Google')).then(() => done());
+  });
+
+  it('should be able to do a Google search', function(done) {
+    this.timeout(10000);
+
+    // Navigate to google.com
+    client.get('https://www.google.com');
+    client.wait(until.titleIs('Google'))
+
+    // Type a search query
+    client.do([
+      ['sendKeys', 'input#lst-ib', {}, 'cold brew npm' + Key.ENTER]
+    ]);
+
+    // Wait for the next page to load
+    client.wait(until.titleIs('cold brew npm - Google Search'))
+      .then(() => done());
+  });
+
+  after(function (done) {
+    client.quit().then(() => done());
+  });
+});
+```
 
 ## <a name="docs"></a>API Documentation
 We're working hard to get this out to you. The API docs are

@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/team-jwd/cold-brew",
   "bugs": {
-    "url": "https://github.com/team-jwd/cold-brew/issues"
+    "url": "https://github.com/team-jwd/cold-brew/issues",
+    "email": "coldbrewtesting@gmail.com"
   }
 }
