@@ -22,5 +22,9 @@
   },
   "devDependencies": {
     "jsdoc": "^3.4.2"
+  },
+  "homepage": "https://github.com/team-jwd/cold-brew",
+  "bugs": {
+    "url": "https://github.com/team-jwd/cold-brew/issues"
   }
 }
