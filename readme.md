@@ -66,6 +66,7 @@ npm init -y
 ```
 For this demo, we will need to install a couple of packages from npm:
 ```bash
+npm install --save cold-brew
 npm install --save-dev mocha selenium-webdriver
 ```
 Next, inside the directory you created, make a new file named `cold-brew-test.js`:
