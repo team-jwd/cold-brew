@@ -94,12 +94,20 @@ describe('ColdBrew client', function() {
   });
 });
 ```
-Finally, to run your test, let's run the test script in the terminal:
+Finally, to run your test, let's put the following test script into your
+`package.json` file (which should already exist at this point):
+
+```json
+"scripts": {
+  "test": "mocha ./cold-brew-test.js"
+}
+```
+And then on your terminal:
 ```bash
 npm test
 ```
 If all goes well, you should see a  Chrome browser window open,
 navigate to google.com, and then close, and mocha should
-report that the test passed in your terminal.
+report that the test passed in your terminal!
 
 ## Documentation
