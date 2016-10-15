@@ -64,7 +64,7 @@ $(document).ready(() => {
   });
 
   socket.on('joined', (numClients) => {
-
+    console.log(numClients);
   });
 
   $(window).on('unload', () => {
