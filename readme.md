@@ -71,6 +71,9 @@ navigate to google.com, and then close, and mocha should
 report that the test passed in your terminal!
 
 ## <a name="docs"></a>API Documentation
+We're working hard to get this out to you. The API docs are
+coming soon!
+
 ## Install
 
 ```bash
@@ -121,8 +124,5 @@ Now you're ready to get testing!
 
 ---
 ## Test
-
-### Getting Started: The absolute beginner's guide
-
 
 ## Documentation
