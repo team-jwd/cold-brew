@@ -4,7 +4,73 @@ ColdBrew is a Javascript library that enables easy automated testing
 of your WebRTC application.
 
 ---
+## <a name="getting-started"></a>Getting Started: the absolute beginner's guide
+This section of the readme is intended for people completely
+new to ColdBrew. If you are familiar with it,
+you may want to view the 
+[API Docs](#docs) instead.
 
+To learn how to use the ColdBrew API, let's run a super-simple
+test. In your terminal, make a new directory and initialize it with an npm package:
+```bash
+mkdir cold-brew-test
+cd cold-brew-test
+npm init -y
+```
+For this demo, we will need to install a couple of packages from npm:
+```bash
+npm install --save cold-brew
+npm install --save-dev mocha selenium-webdriver
+```
+Next, inside the directory you created, make a new file named `cold-brew-test.js`:
+```bash
+touch cold-brew-test.js
+```
+In this file, place the following code:
+```javascript
+const coldBrew = require('cold-brew');
+const selenium = require('selenium-webdriver');
+const { until } = selenium;
+
+let client;
+
+describe('ColdBrew client', function() {
+  it('should be able to navigate to google.com', function(done) {
+    this.timeout(10000);
+
+    client = coldBrew.createClient();
+
+    client.get('https://www.google.com');
+    client.wait(until.titleIs('Google')).then(() => done());
+  });
+
+  after(function(done) {
+    client.quit().then(() => done());
+  });
+});
+```
+Finally, to run your test, let's put a test script into your
+`package.json` file. Find the following in your `package.json` file:
+```json
+"scripts": {
+  "test": "echo \"Error: no test specified\" && exit 1"
+}
+```
+...and replace it with this:
+```json
+"scripts": {
+  "test": "mocha ./cold-brew-test.js"
+}
+```
+And then on your terminal:
+```bash
+npm test
+```
+If all goes well, you should see a  Chrome browser window open,
+navigate to google.com, and then close, and mocha should
+report that the test passed in your terminal!
+
+## <a name="docs"></a>API Documentation
 ## Install
 
 ```bash
@@ -57,57 +123,6 @@ Now you're ready to get testing!
 ## Test
 
 ### Getting Started: The absolute beginner's guide
-To learn how to use the ColdBrew API, let's run a super-simple
-test. In your terminal, make a new directory and initialize it with an npm package:
-```bash
-mkdir cold-brew-test
-cd cold-brew-test
-npm init -y
-```
-For this demo, we will need to install a couple of packages from npm:
-```bash
-npm install --save cold-brew
-npm install --save-dev mocha selenium-webdriver
-```
-Next, inside the directory you created, make a new file named `cold-brew-test.js`:
-```bash
-touch cold-brew-test.js
-```
-In this file, place the following code:
-```javascript
-const coldBrew = require('cold-brew');
-const selenium = require('selenium-webdriver');
-const { until } = selenium;
 
-let client;
-
-describe('ColdBrew client', function() {
-  it('should be able to navigate to google.com', function(done) {
-    client = coldBrew.createClient();
-
-    client.get('www.google.com');
-    client.wait(until.titleIs('Google')).then(() => done());
-  });
-
-  after(function(done) {
-    client.quit().then(() => done());
-  });
-});
-```
-Finally, to run your test, let's put the following test script into your
-`package.json` file (which should already exist at this point):
-
-```json
-"scripts": {
-  "test": "mocha ./cold-brew-test.js"
-}
-```
-And then on your terminal:
-```bash
-npm test
-```
-If all goes well, you should see a  Chrome browser window open,
-navigate to google.com, and then close, and mocha should
-report that the test passed in your terminal!
 
 ## Documentation
