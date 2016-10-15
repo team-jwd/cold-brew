@@ -1,6 +1,6 @@
 {
   "name": "cold-brew",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "A testing module for TDD with apps that use the RTCPeerConnection API",
   "main": "cold-brew-test.js",
   "scripts": {
