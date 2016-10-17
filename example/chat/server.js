@@ -9,10 +9,41 @@ const bodyParser = require('body-parser');
 let numClients = 0;
 
 io.on('connection', (socket) => {
-  numClients++;
-  socket.emit('joined', numClients);
-  socket.on('left', () => {
-    numClients--;
+  socket.on('join_room', (roomName, respond) => {
+    numClients = io.sockets.adapter.rooms[roomName] ?
+      io.sockets.adapter.rooms[roomName].length : 0;
+    if (numClients < 2) {
+      socket.join(roomName);
+      respond(numClients + 1);
+    } else {
+      socket.emit('room_full', roomName);
+      respond('full');
+    }
+  });
+
+  socket.on('create_room', (roomName, respond) => {
+    if (io.sockets.adapter.rooms[roomName]) {
+      respond('exists');
+    } else {
+      socket.join(roomName);
+      respond('created');
+    }
+  });
+
+  socket.on('remote candidate', (info) => {
+    console.log('in socket remote candidate');
+    const { roomName, candidate } = info;
+    socket.broadcast.to(roomName).emit('remote candidate', candidate);
+  });
+
+  socket.on('offer', (sessionDesc, roomName) => {
+    console.log('in socket offer');
+    socket.broadcast.to(roomName).emit('offer', sessionDesc);
+  });
+
+  socket.on('answer', (sessionDesc, roomName) => {
+    console.log('in socket answer');
+    socket.broadcast.to(roomName).emit('answer', sessionDesc);
   });
 });
 
