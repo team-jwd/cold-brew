@@ -1,6 +1,6 @@
 {
   "name": "cold-brew",
-  "version": "1.0.14",
+  "version": "1.0.18",
   "description": "A testing module for TDD with apps that use the RTCPeerConnection API",
   "main": "cold-brew-test.js",
   "scripts": {
@@ -22,5 +22,10 @@
   },
   "devDependencies": {
     "jsdoc": "^3.4.2"
+  },
+  "homepage": "https://github.com/team-jwd/cold-brew",
+  "bugs": {
+    "url": "https://github.com/team-jwd/cold-brew/issues",
+    "email": "coldbrewtesting@gmail.com"
   }
 }
