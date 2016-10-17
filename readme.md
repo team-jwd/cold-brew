@@ -11,12 +11,12 @@ in making ColdBrew better!
 
 ---
 ## Contents
-* [Getting Started: The absolute beginner's guide](#getting-started)
+* [Getting Started: The absolute beginner's guide](#getting-started-1)
 * [Getting Started part 2: Testing WebRTC with ColdBrew](#getting-started-2)
 * [API Documentation](#docs)
 
 ---
-## <a name="getting-started"></a>Getting Started: the absolute beginner's guide
+## <a name="getting-started-1"></a> Getting Started: the absolute beginner's guide
 This section of the readme is intended for people completely
 new to ColdBrew. If you are familiar with it already,
 you may want to view the 
