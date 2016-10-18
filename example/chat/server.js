@@ -1,3 +1,4 @@
+/* eslint import/newline-after-import: 0 */
 const express = require('express');
 const app = express();
 const http = require('http');
@@ -7,11 +8,25 @@ const path = require('path');
 const bodyParser = require('body-parser');
 
 let numClients = 0;
-
 io.on('connection', (socket) => {
-  numClients++;
-  socket.emit('joined', numClients);
-  socket.on('left', () => {
+  socket.on('join', (respond) => {
+    numClients++;
+    respond(numClients);
+  });
+
+  socket.on('send ice candidate', (candidate) => {
+    socket.broadcast.emit('receive ice candidate', candidate);
+  });
+
+  socket.on('send offer', (offer) => {
+    socket.broadcast.emit('receive offer', offer);
+  });
+
+  socket.on('send answer', (answer) => {
+    socket.broadcast.emit('receive answer', answer);
+  });
+
+  socket.on('leave page', () => {
     numClients--;
   });
 });
