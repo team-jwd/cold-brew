@@ -1,139 +1,48 @@
 /* eslint no-undef: 0 */
-// const SERVERS = {
-//   'iceServers': [
-//     {
-//       'url': 'stun:stun.l.google.com:19302',
-//     },
-//     {
-//       url: 'turn:numb.viagenie.ca',
-//       credential: 'muazkh',
-//       username: 'webrtc@live.com',
-//     },
-//     {
-//       url: 'turn:192.158.29.39:3478?transport=udp',
-//       credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-//       username: '28224511:1379330808',
-//     },
-//     {
-//       url: 'turn:192.158.29.39:3478?transport=tcp',
-//       credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-//       username: '28224511:1379330808',
-//     },
-//   ],
-// };
-let isInitiator = false;
+/* eslint no-shadow: 0 */
+/* eslint no-use-before-define: 0 */
+/* eslint no-param-reassign: 0 */
+const SERVERS = {
+  iceServers: [
+    {
+      url: 'stun:stun.l.google.com:19302',
+    },
+    {
+      url: 'turn:numb.viagenie.ca',
+      credential: 'muazkh',
+      username: 'webrtc@live.com',
+    },
+    {
+      url: 'turn:192.158.29.39:3478?transport=udp',
+      credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+      username: '28224511:1379330808',
+    },
+    {
+      url: 'turn:192.158.29.39:3478?transport=tcp',
+      credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+      username: '28224511:1379330808',
+    },
+  ],
+};
 
-const messages = [];
 let peerConnection = null;
-let channel = null;
-const roomName = 'test-room';
+let isInitiator = false;
+let socket = null;
+let dataChannel = null;
 
 $(document).ready(() => {
-  const socket = io();
+  socket = io();
   $('form').on('submit', (e) => {
     e.preventDefault();
   });
 
-  peerConnection = coldBrewRTC(
-    null,
-    { optional: [{ RtcDataChannels: true }] }
-  );
-
-  peerConnection.onicecandidate = (e) => {
-    console.log('e.candidate, icecandidate: ', e.candidate);
-    if (e.candidate) {
-      socket.emit('remote candidate', {
-        roomName,
-        candidate: JSON.stringify(e.candidate),
-      });
-    }
-  };
-
-
-  socket.emit('join_room', roomName, (res) => {
-    if (res === 'full') {
-      // room is full
-    } else if (res === 2) {
-      isInitiator = true;
-    }
-    if (isInitiator) {
-      try {
-        console.log('trying!');
-        channel = peerConnection.createDataChannel(
-          'sendDataChannel',
-          { reliable: false }
-        );
-      } catch (e) {
-        throw e;
-      }
-      console.log('pre peerConnection', peerConnection);
-      new Promise((resolve, reject) => {
-        peerConnection.createOffer((sessionDescription) => {
-          console.log('creating offer', sessionDescription);
-          console.log('CREATED OFFER: ', channel);
-          peerConnection.setLocalDescription(sessionDescription);
-          socket.emit('offer', sessionDescription, roomName);
-          resolve(sessionDescription);
-        }, (error) => {
-          console.log(error);
-          reject(error);
-        });
-      });
-      socket.on('answer', (sessionDescription) => {
-        console.log('recieved answer: ', sessionDescription);
-        peerConnection.setRemoteDescription(sessionDescription);
-      });
-
-      channel.onopen = () => {
-        console.log('in channel onopen');
-        channel.onmessage = (message) => {
-          console.log('channel onmessage');
-          const msg = JSON.parse(message.data.message);
-          messages.push(msg);
-        };
-      };
-    } else {
-      console.log('promises');
-      socket.on('offer', (sessionDescription) => {
-        console.log('recieved offer', sessionDescription);
-        peerConnection.setRemoteDescription(sessionDescription);
-        new Promise((resolve, reject) => {
-          peerConnection.createAnswer((sessionDescriptionn) => {
-            console.log('pc.createAnswer: ', sessionDescriptionn);
-            peerConnection.setLocalDescription(sessionDescriptionn);
-            socket.emit('answer', sessionDescriptionn, roomName);
-            resolve(sessionDescriptionn);
-          });
-        });
-      });
-      console.log('CHANNEL PRE ondatachannel: ', channel);
-      peerConnection.ondatachannel = (event) => {
-        console.log('pc.onDataChannel: ', event);
-        const dataChannel = event.channel;
-        dataChannel.onmessage = (message) => {
-          console.log('dc.onmessage: ', message);
-          this.handleRTCData(message);
-          const msg = JSON.parse(message.data.message);
-          messages.push(msg);
-        };
-      };
-    }
-  });
-
-  // socket.emit('create_room', roomName, (respond) => {
-  //   if (respond !== 'exists') {
-  //     console.log('wtf homes');
-  //   }
-  // });
-
-  $('button').on('click', function () {
+  $('button').on('click', function message() {
     const message = $(this).siblings()[0].value;
-    const msgObj = { message };
-    const messageElement = $('<p></p>', { class: 'message' });
-    messageElement.text(message);
-    $('#chat-window').append(messageElement);
+    handleIncomingMessage(message);
+
     $(this).siblings()[0].value = '';
-    channel.send(JSON.stringify(msgObj));
+
+    dataChannel.send(message);
   });
 
   $('input').on('keypress', (e) => {
@@ -142,20 +51,96 @@ $(document).ready(() => {
     }
   });
 
-  socket.on('remote candidate', (candidate) => {
-    console.log('remote candidate: ', candidate);
-    const candidateObj = JSON.parse(candidate);
-    peerConnection.addIceCandidate(candidateObj);
-  });
-  console.log('before if: ', isInitiator);
+  socket.emit('join', (numClients) => {
+    isInitiator = numClients === 2;
 
+    peerConnection = createRTC(socket);
 
-
-  socket.on('joined', (numClients) => {
-    console.log(numClients);
+    if (isInitiator) {
+      initiateSignaling(socket, peerConnection);
+    } else {
+      prepareToReceiveOffer(socket, peerConnection);
+    }
   });
 
   $(window).on('unload', () => {
-    socket.emit('left');
+    socket.emit('leave page');
   });
 });
+
+
+function createRTC(socket) {
+  const peerConnection = coldBrewRTC(
+    SERVERS,
+    { optional: [{ RtcDataChannels: true }] }
+  );
+
+  peerConnection.onicecandidate = (e) => {
+    if (e.candidate) {
+      socket.emit('send ice candidate', e.candidate);
+    }
+  };
+
+  socket.on('receive ice candidate', (candidate) => {
+    peerConnection.addIceCandidate(candidate);
+  });
+
+  return peerConnection;
+}
+
+
+function initiateSignaling(socket, peerConnection) {
+  initiateDataChannel(peerConnection);
+
+  peerConnection.createOffer((offer) => {
+    peerConnection.setLocalDescription(offer);
+    socket.emit('send offer', offer);
+  }, (err) => {
+    throw err;
+  });
+
+  socket.on('receive answer', (answer) => {
+    peerConnection.setRemoteDescription(answer);
+  });
+}
+
+
+function initiateDataChannel(peerConnection) {
+  dataChannel = peerConnection.createDataChannel(
+    'messageChannel',
+    { reliable: false }
+  );
+
+  dataChannel.onopen = () => {
+    dataChannel.onmessage = (message) => {
+      handleIncomingMessage(message.data);
+    };
+  };
+}
+
+
+function prepareToReceiveOffer(socket, peerConnection) {
+  peerConnection.ondatachannel = (e) => {
+    dataChannel = e.channel;
+    dataChannel.onmessage = (message) => {
+      handleIncomingMessage(message.data);
+    };
+  };
+
+  socket.on('receive offer', (offer) => {
+    peerConnection.setRemoteDescription(offer);
+    peerConnection.createAnswer((answer) => {
+      peerConnection.setLocalDescription(answer);
+      socket.emit('send answer', answer);
+    }, (err) => {
+      throw err;
+    });
+  });
+}
+
+
+function handleIncomingMessage(message) {
+  const messageElement = $('<p></p>', { class: 'message' });
+  messageElement.text(message);
+  $('#chat-window').append(messageElement);
+}

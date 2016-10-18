@@ -13,6 +13,7 @@
     "body-parser": "^1.15.2",
     "cold-brew": "^1.0.18",
     "express": "^4.14.0",
+    "selenium-webdriver": "^3.0.0-beta-3",
     "socket.io": "^1.5.0",
     "socket.io-client": "^1.5.0",
     "webrtc-adapter": "^2.0.4"

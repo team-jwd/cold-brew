@@ -1,3 +1,4 @@
+/* eslint import/newline-after-import: 0 */
 const express = require('express');
 const app = express();
 const http = require('http');
@@ -7,43 +8,26 @@ const path = require('path');
 const bodyParser = require('body-parser');
 
 let numClients = 0;
-
 io.on('connection', (socket) => {
-  socket.on('join_room', (roomName, respond) => {
-    numClients = io.sockets.adapter.rooms[roomName] ?
-      io.sockets.adapter.rooms[roomName].length : 0;
-    if (numClients < 2) {
-      socket.join(roomName);
-      respond(numClients + 1);
-    } else {
-      socket.emit('room_full', roomName);
-      respond('full');
-    }
+  socket.on('join', (respond) => {
+    numClients++;
+    respond(numClients);
   });
 
-  socket.on('create_room', (roomName, respond) => {
-    if (io.sockets.adapter.rooms[roomName]) {
-      respond('exists');
-    } else {
-      socket.join(roomName);
-      respond('created');
-    }
+  socket.on('send ice candidate', (candidate) => {
+    socket.broadcast.emit('receive ice candidate', candidate);
   });
 
-  socket.on('remote candidate', (info) => {
-    console.log('in socket remote candidate');
-    const { roomName, candidate } = info;
-    socket.broadcast.to(roomName).emit('remote candidate', candidate);
+  socket.on('send offer', (offer) => {
+    socket.broadcast.emit('receive offer', offer);
   });
 
-  socket.on('offer', (sessionDesc, roomName) => {
-    console.log('in socket offer');
-    socket.broadcast.to(roomName).emit('offer', sessionDesc);
+  socket.on('send answer', (answer) => {
+    socket.broadcast.emit('receive answer', answer);
   });
 
-  socket.on('answer', (sessionDesc, roomName) => {
-    console.log('in socket answer');
-    socket.broadcast.to(roomName).emit('answer', sessionDesc);
+  socket.on('leave page', () => {
+    numClients--;
   });
 });
 
