@@ -321,7 +321,9 @@ Parameters:
 * *selector*: A CSS selector to locate the element
 * *attributes*: An object containing attributes to filter the results of the CSS selector
 
-Returns: A WebElement matching the CSS selector and the given attributes
+Returns: A WebElementPromise matching the CSS selector and the given attributes.
+Resolves with the WebElement if the element is located or rejects with
+TypeError if not.
 
 Usage example:
 ```javascript
@@ -345,6 +347,13 @@ Parameters:
   * `selector`: a CSS selector that will select the DOM element the simulated input will happen to
   * `attributes`: an object containing additional attributes by which to filter the CSS selector. If no filtering is desired, `{}` should be provided.
   * `userInput`: the data that the simulated user will input, if applicable. Required if `action` is `'sendKeys'`.
+
+Returns: Promise that resolves when all of the individual navigation events
+resolve or rejects with TypeError if one of the navigation events does not
+locate a matching element on the page.
+
+Throws TypeError if the `action` entry in any of the elements 
+of `navigationEvents` is invalid.
 
 Usage example:
 ```javascript
