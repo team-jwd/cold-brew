@@ -31,18 +31,25 @@ let socket = null;
 let dataChannel = null;
 
 $(document).ready(() => {
+  let getVideo = $('#getVideo');
+  getVideo.attr('disabled', true);
+  let sendVideo = $('#sendVideo');
+  sendVideo.attr('disabled', true);
+
   socket = io();
   $('form').on('submit', (e) => {
     e.preventDefault();
   });
 
-  $('button').on('click', function message() {
+  $('#sendMessage').on('click', function message() {
     const message = $(this).siblings()[0].value;
     handleIncomingMessage(message);
 
     $(this).siblings()[0].value = '';
 
-    dataChannel.send(message);
+    const data = JSON.stringify({ type: 'message', message: message });
+
+    dataChannel.send(data);
   });
 
   $('input').on('keypress', (e) => {
@@ -68,7 +75,6 @@ $(document).ready(() => {
   });
 });
 
-
 function createRTC(socket) {
   const peerConnection = coldBrewRTC(
     SERVERS,
@@ -85,22 +91,42 @@ function createRTC(socket) {
     peerConnection.addIceCandidate(candidate);
   });
 
+  peerConnection.onaddstream = function(event) {
+    console.log('onaddstream event invoked');
+    $('#remoteVideo').attr('src', URL.createObjectURL(event.stream));
+  }
+
   return peerConnection;
 }
 
 
 function initiateSignaling(socket, peerConnection) {
   initiateDataChannel(peerConnection);
+  let initiatedVideo = initiateLocalVideo(peerConnection);
 
-  peerConnection.createOffer((offer) => {
-    peerConnection.setLocalDescription(offer);
-    socket.emit('send offer', offer);
-  }, (err) => {
-    throw err;
+  initiatedVideo.then(function() {
+    console.log('Video initiated');
+    peerConnection.createOffer((offer) => {
+      console.log('created offer: ', offer);
+      peerConnection.setLocalDescription(offer);
+      socket.emit('send offer', offer);
+    }, (err) => {
+      throw err;
+    });
   });
 
   socket.on('receive answer', (answer) => {
     peerConnection.setRemoteDescription(answer);
+  });
+}
+
+function initiateLocalVideo(peerConnection) {
+  return new Promise(function(resolve, reject) { 
+    navigator.getUserMedia({ video: true }, function (localStream) {
+      $('#localVideo').attr('src', URL.createObjectURL(localStream));
+      peerConnection.addStream(localStream);
+      resolve();
+    });
   });
 }
 
@@ -111,17 +137,55 @@ function initiateDataChannel(peerConnection) {
     { reliable: false }
   );
 
+  dataChannel.onclose = () => {
+    console.log('DataChannel Closed');
+  }
+
   dataChannel.onopen = () => {
+    console.log('DataChannel Opened');
+    $('#getVideo').attr('disabled', false);
+
     dataChannel.onmessage = (message) => {
-      handleIncomingMessage(message.data);
+      const data = JSON.parse(message.data);
+      console.log('onmessage event fire, data: ', data);
+
+      if (data.type === 'offer') {
+        handleOffer(data.offer);
+      } else if (data.type === 'answer') {
+        handleAnswer(data.answer);
+      } else {
+        handleIncomingMessage(data.message);
+      }
     };
   };
 }
 
+function handleOffer(offer) {
+  peerConnection.setRemoteDescription(offer);
+  peerConnection.createAnswer(function(answer) {
+    peerConnection.setLocalDescription(answer);
+    const data = JSON.stringify({ type: 'answer', answer: answer }); 
+    dataChannel.send(data);
+  });
+}
+
+function handleAnswer(answer) {
+  peerConnection.setLocalDescription(answer);
+}
 
 function prepareToReceiveOffer(socket, peerConnection) {
   peerConnection.ondatachannel = (e) => {
     dataChannel = e.channel;
+
+    dataChannel.onclose = () => {
+      console.log('DataChannel Closed');
+    }
+
+    dataChannel.onopen = () => {
+      console.log('DataChannel Opened');
+      $('#getVideo').attr('disabled', false);
+    }
+
     dataChannel.onmessage = (message) => {
       handleIncomingMessage(message.data);
     };
@@ -129,11 +193,18 @@ function prepareToReceiveOffer(socket, peerConnection) {
 
   socket.on('receive offer', (offer) => {
     peerConnection.setRemoteDescription(offer);
-    peerConnection.createAnswer((answer) => {
-      peerConnection.setLocalDescription(answer);
-      socket.emit('send answer', answer);
-    }, (err) => {
-      throw err;
+
+    //before answer, initiateVideo
+    let initiatedVideo = initiateLocalVideo(peerConnection);
+
+    initiatedVideo.then(function() {
+      peerConnection.createAnswer((answer) => {
+        console.log('created answer:', answer);
+        peerConnection.setLocalDescription(answer);
+        socket.emit('send answer', answer);
+      }, (err) => {
+        throw err;
+      });
     });
   });
 }
