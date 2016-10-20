@@ -128,16 +128,29 @@ function addColdBrewMethods(client) {
     const validInput = navigationEvents.every(event =>
       validNavigation(event));
 
-    if (!validInput) throw new ColdBrewError('Navigation events');
+    if (!validInput) throw new TypeError('Navigation events');
 
-    navigationEvents.forEach(event => {
+    const navigationPromises = navigationEvents.reduce((arr, event) => {
       const action = event[0];
       const selector = event[1];
       const attributes = event[2];
       const keys = event[3]; // May be undefined if no 3rd item was given
 
-      client.findElementByAttributes(selector, attributes)[action](keys);
-    });
+      const navigationPromise = client.findElementByAttributes(selector, attributes)
+        .then((element) => element[action](keys))
+        .catch((err) => {
+          throw new TypeError(
+            `No element found with selector ${selector}
+            and attributes ${attributes}`
+          );
+        });
+
+      arr.push(navigationPromise);
+      
+      return arr;
+    }, []);
+    
+    return selenium.promise.all(navigationPromises);
   };
 
 

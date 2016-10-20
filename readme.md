@@ -11,12 +11,12 @@ in making ColdBrew better!
 
 ---
 ## Contents
-* [Getting Started: The absolute beginner's guide](#getting-started)
+* [Getting Started: The absolute beginner's guide](#getting-started-1)
 * [Getting Started part 2: Testing WebRTC with ColdBrew](#getting-started-2)
 * [API Documentation](#docs)
 
 ---
-## <a name="getting-started"></a>Getting Started: the absolute beginner's guide
+## <a name="getting-started-1"></a> Getting Started: the absolute beginner's guide
 This section of the readme is intended for people completely
 new to ColdBrew. If you are familiar with it already,
 you may want to view the 
@@ -321,7 +321,9 @@ Parameters:
 * *selector*: A CSS selector to locate the element
 * *attributes*: An object containing attributes to filter the results of the CSS selector
 
-Returns: A WebElement matching the CSS selector and the given attributes
+Returns: A WebElementPromise matching the CSS selector and the given attributes.
+Resolves with the WebElement if the element is located or rejects with
+TypeError if not.
 
 Usage example:
 ```javascript
@@ -345,6 +347,13 @@ Parameters:
   * `selector`: a CSS selector that will select the DOM element the simulated input will happen to
   * `attributes`: an object containing additional attributes by which to filter the CSS selector. If no filtering is desired, `{}` should be provided.
   * `userInput`: the data that the simulated user will input, if applicable. Required if `action` is `'sendKeys'`.
+
+Returns: Promise that resolves when all of the individual navigation events
+resolve or rejects with TypeError if one of the navigation events does not
+locate a matching element on the page.
+
+Throws TypeError if the `action` entry in any of the elements 
+of `navigationEvents` is invalid.
 
 Usage example:
 ```javascript

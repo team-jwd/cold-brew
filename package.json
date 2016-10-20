@@ -1,10 +1,10 @@
 {
   "name": "cold-brew",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "A testing module for TDD with apps that use the RTCPeerConnection API",
   "main": "cold-brew-test.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha test/*.spec.js",
     "generate-docs": "./node_modules/.bin/jsdoc ./cold-brew-test.js -d ./docs"
   },
   "keywords": [
@@ -21,6 +21,7 @@
     "selenium-webdriver": "^3.0.0-beta-3"
   },
   "devDependencies": {
+    "chai": "^3.5.0",
     "jsdoc": "^3.4.2"
   },
   "homepage": "https://github.com/team-jwd/cold-brew",
