@@ -1,13 +1,23 @@
 const expect = require('chai').expect;
+const ngrok = require('ngrok');
 const coldBrew = require('../cold-brew-test');
 
 const { ColdBrewError } = coldBrew;
 
 require('./../example/chat/server.js');
 
-const ADDRESS = 'http://localhost:3000';
+let ADDRESS;
 
-describe('coldBrew', function() {
+describe('coldBrew', function () {
+  before(function (done) {
+    ngrok.connect(3000, function (err, url) {
+      if (err) throw err;
+
+      ADDRESS = url;
+      done();
+    });
+  });
+
   describe('findElementByAttributes', function() {
     let client;
 
@@ -16,6 +26,8 @@ describe('coldBrew', function() {
     });
 
     it('should be able to locate an element by its attribute', function(done) {
+      this.timeout(10000);
+      
       client.get(ADDRESS);
       client.findElementByAttributes('input', {
         placeholder: 'Type a message...'
@@ -23,6 +35,8 @@ describe('coldBrew', function() {
     });
 
     it('should not be able to locate an element that doesn\'t exist', function (done) {
+      this.timeout(10000);
+      
       client.get(ADDRESS);
       client.findElementByAttributes('span', {
         placeholder: 'This does not exist...',
@@ -45,6 +59,8 @@ describe('coldBrew', function() {
     });
 
     it('should be able to perform multiple navigation events', function (done) {
+      this.timeout(10000);
+      
       client.get(ADDRESS);
       client.do([
         ['sendKeys', 'input', { placeholder: 'Type a message...' }, 'hello'],
@@ -55,6 +71,8 @@ describe('coldBrew', function() {
     });
 
     it('should throw an error if any of the navigation events have an invalid action', function () {
+      this.timeout(10000);
+      
       client.get(ADDRESS);
       try {
         client.do([
@@ -81,6 +99,8 @@ describe('coldBrew', function() {
     });
 
     it('should reject with TypeError if any of the elements cannot be located', function (done) {
+      this.timeout(5000);
+      
       client.get(ADDRESS);
       client.do([
         ['sendKeys', 'input', { placeholder: 'Type a message...' }, 'hello'],
@@ -94,6 +114,31 @@ describe('coldBrew', function() {
 
     after(function (done) {
       client.quit().then(() => done());
+    });
+  });
+
+  describe('waitUntilRTCEvents', function () {
+    let client1, client2;
+
+    before(function () {
+      client1 = coldBrew.createClient();
+      client2 = coldBrew.createClient();
+    });
+
+    it('should detect that certain RTC events have occurred', function (done) {
+      this.timeout(10000);
+      
+      client1.get(ADDRESS);
+      client2.get(ADDRESS);
+
+      client1.waitUntilRTCEvents(
+        'signalingstatechange'
+      ).then((occurred) => {if (occurred) done()});
+    });
+
+    after(function (done) {
+      client1.quit();
+      client2.quit().then(() => done());
     });
   });
 });
