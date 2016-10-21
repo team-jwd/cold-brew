@@ -18,6 +18,7 @@
   "license": "ISC",
   "dependencies": {
     "chromedriver": "^2.24.1",
+    "ngrok": "^2.2.3",
     "selenium-webdriver": "^3.0.0-beta-3"
   },
   "devDependencies": {

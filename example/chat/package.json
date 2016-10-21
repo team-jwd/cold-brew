@@ -11,8 +11,11 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.15.2",
+    "child-process": "^1.0.2",
     "cold-brew": "^1.0.18",
     "express": "^4.14.0",
+    "https": "^1.0.0",
+    "jquery": "^3.1.1",
     "selenium-webdriver": "^3.0.0-beta-3",
     "socket.io": "^1.5.0",
     "socket.io-client": "^1.5.0",
