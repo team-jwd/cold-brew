@@ -13,6 +13,7 @@ in making ColdBrew better!
 ## Contents
 * [Getting Started: The absolute beginner's guide](#getting-started-1)
 * [Getting Started part 2: Testing WebRTC with ColdBrew](#getting-started-2)
+* [Tips & Best Practices](#tips-and-best-practices)
 * [API Documentation](#docs)
 
 ---
@@ -129,6 +130,35 @@ describe('ColdBrew client', function () {
 ---
 ## <a name="getting-started-2"></a> Getting Started part 2: Testing WebRTC
 This section is a work in progress; check back soon!
+
+---
+## <a name="tips-and-best-practices"></a> Tips & best practices
+### Timeouts in test cases
+
+In many popular test runner libraries, a default timeout is set,
+and a test case is assumed to have failed if it is not finished
+within the timeout. For example, in Mocha, the default timeout
+is 2000 ms.
+
+Since ColdBrew runs real browser instances,
+the default timeout is sometimes not enough to run an entire test
+case. If you find your tests timing out when you think they should
+be passing, try making the timeout longer. For example, in Mocha,
+you can use `this.timeout` to change the default timeout length:
+```javascript
+describe('testing something', function() {
+  it('should do something', function(done) {
+    this.timeout(5000);
+
+    doSomethingAsynchronous().then(() => {
+      done()
+    });
+  });
+});
+```
+Note that the callback functions for `describe` and `it` should
+*not* be ES2015 arrow functions (see the
+[Mocha docs](https://mochajs.org/#arrow-functions) for more details)
 
 ---
 ## <a name="docs"></a> API Documentation

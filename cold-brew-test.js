@@ -14,7 +14,10 @@ function createClient() {
   let client = new selenium.Builder()
     .usingServer()
     .withCapabilities({
-      browserName: 'chrome'
+      browserName: 'chrome',
+      chromeOptions: {
+        args: ['--use-fake-ui-for-media-stream']
+      }
     })
     .build()
 
