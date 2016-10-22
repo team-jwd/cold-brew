@@ -9,17 +9,6 @@ const { resetNumClients } = require('./../example/chat/server.js');
 let ADDRESS = 'http://localhost:3000';
 
 describe('coldBrew', function () {
-  // before(function (done) {
-  //   this.timeout(10000);
-
-  //   ngrok.connect(3000, function (err, url) {
-  //     if (err) throw err;
-
-  //     ADDRESS = url;
-  //     done();
-  //   });
-  // });
-
   beforeEach(function () {
     resetNumClients(0);
   });
@@ -176,13 +165,34 @@ describe('coldBrew', function () {
           }
         })
         .catch((err) => { if (err) done() });
-      
-    })
+    });
 
     afterEach(function (done) {
       client1.quit();
       client2.quit().then(() => done());
     });
+  });
 
+  describe('waitUntilSignalingEvents', function () {
+    beforeEach(function () {
+      client1 = coldBrew.createClient();
+      client2 = coldBrew.createClient();
+    })
+
+    it('should be able to detect that signaling events have occurred', function (done) {
+      this.timeout(10000);
+
+      client1.get(ADDRESS);
+      client2.get(ADDRESS);
+
+      client1.waitUntilSendSignaling([
+        'join'
+      ]).then((occurred) => { if (occurred) done() });
+    });
+
+    afterEach(function (done) {
+      client1.quit();
+      client2.quit().then(() => done());
+    })
   });
 });
