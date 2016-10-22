@@ -59,16 +59,50 @@ function addColdBrewMethods(client) {
 
     return function() {
       return client.executeScript(function (events, inOrder) {
-        if (!inOrder) {
-          return events.every((eventType) => {
-            return window.coldBrewData.RTCEvents
-              .map(event => event.type)
-              .includes(eventType)
-          });
+        // Check to make sure coldBrewData has been initialized
+        if (!(window.coldBrewData && window.coldBrewData.RTCEvents)) {
+          return false;
         }
 
-       // Need to implement functionality for inOrder === true;
+        // Handle the case where the user doesn't care if the events
+        // happened in a certain order
+        if (!inOrder) {
+          const RTCEvents = window.coldBrewData.RTCEvents
+            .map(event => event.type);
           
+          return events.every(eventType => RTCEvents.includes(eventType));
+        }
+
+        const p = document.createElement('p');
+        p.id = 'logMessage';
+        p.innerText = `${events}, ${JSON.stringify(window.coldBrewData.RTCEvents)}`;
+
+        document.body.appendChild(p);
+
+        // Handle the case where the user does care if the events
+        // happened in a certain order
+        const windowEvents = window.coldBrewData.RTCEvents
+          .map(event => event.type);
+        
+        return sameElementsInSameOrder(events, windowEvents);
+        
+        function sameElementsInSameOrder(arr1, arr2) {
+          let remainingArr2 = arr2;
+          return arr1.reduce((truth, element) => {
+            console.log("Current element:", element)
+            
+            if (!truth) return false;
+            
+            const index = remainingArr2.indexOf(element);
+            if (index === -1) {
+              console.log("Element not found in", remainingArr2)
+              return false;
+            }
+            
+            remainingArr2 = remainingArr2.slice(index);
+            return true;
+          }, true)
+        }
       }, events, inOrder);
     }
   };
@@ -81,8 +115,8 @@ function addColdBrewMethods(client) {
    * @param   events description
    * @return {type}           description
    */
-  client.waitUntilRTCEvents = function(events) {
-    return client.wait(client.untilRTCEvents(events));
+  client.waitUntilRTCEvents = function (events, options, timeout) {
+    return client.wait(client.untilRTCEvents(events, options), timeout);
   }
 
 
@@ -149,7 +183,7 @@ function addColdBrewMethods(client) {
         .catch((err) => {
           throw new TypeError(
             `No element found with selector ${selector}
-            and attributes ${attributes}`
+            and attributes ${JSON.stringify(attributes)}`
           );
         });
 
