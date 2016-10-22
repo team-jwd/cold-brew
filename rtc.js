@@ -63,4 +63,7 @@ function coldBrewRTC(servers, options, coldBrewConfig) {
 
 class ColdBrewError extends Error {};
 
-module.exports = { coldBrewRTC, RTC_PEER_CONNECTION_EVENTS };
+if (typeof module !== 'undefined') {
+  module.exports = { coldBrewRTC, RTC_PEER_CONNECTION_EVENTS };
+}
+
