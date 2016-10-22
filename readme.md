@@ -287,13 +287,13 @@ function, the following function are added to it:
   * [client.do(navigationEvents)](#client-do)
 
 <a name="client-until-rtc-events"></a>
-**client.untilRTCEvents(...events)**
+**client.untilRTCEvents(events)**
 
 Returns a promise that will resolve with a truthy value when the specified
 events have fired on the RTCPeerConnection object.
 
 Parameters:
-* *...events*: Any number of names of events that fire on the RTCPeerConnection
+* *events*: An array of names of events that fire on the RTCPeerConnection
   object in the browser
 
 Returns: A promise that will resolve with a truthy value when the specified
@@ -312,14 +312,14 @@ describe('RTCPeerConnection', function() {
     client1.get('https://www.example.com');
     client2.get('https://www.example.com');
 
-    client1.wait(client1.untilRTCEvents('signalingstatechange', 'datachannel'))
+    client1.wait(client1.untilRTCEvents(['signalingstatechange', 'datachannel']))
       .then((occurred) => {if (occurred) done()});
   });
 });
 ```
 
 <a name="client-wait-until-rtc-events"></a>
-**client.waitUntilRTCEvents(...events)**
+**client.waitUntilRTCEvents(events)**
 
 Convenience method, equivalent to invoking `client.wait(client.untilRTCEvents(...events))`
 
@@ -334,7 +334,7 @@ describe('RTCPeerConnection', function() {
     client1.get('https://www.example.com');
     client2.get('https://www.example.com');
 
-    client1.waituntilRTCEvents('signalingstatechange', 'datachannel')
+    client1.waituntilRTCEvents(['signalingstatechange', 'datachannel'])
       .then((occurred) => {if (occurred) done()});
   });
 });
