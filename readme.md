@@ -321,7 +321,7 @@ describe('RTCPeerConnection', function() {
 <a name="client-wait-until-rtc-events"></a>
 **client.waitUntilRTCEvents(events)**
 
-Convenience method, equivalent to invoking `client.wait(client.untilRTCEvents(...events))`
+Convenience method, equivalent to invoking `client.wait(client.untilRTCEvents(events))`
 
 Usage example:
 ```javascript
