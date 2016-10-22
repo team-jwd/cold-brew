@@ -4,24 +4,20 @@ const coldBrew = require('../cold-brew-test');
 
 const { ColdBrewError } = coldBrew;
 
-require('./../example/chat/server.js');
+const { resetNumClients } = require('./../example/chat/server.js');
 
-let ADDRESS;
+let ADDRESS = 'http://localhost:3000';
 
 describe('coldBrew', function () {
-  before(function (done) {
-    ngrok.connect(3000, function (err, url) {
-      if (err) throw err;
-
-      ADDRESS = url;
-      done();
-    });
+  beforeEach(function () {
+    resetNumClients(0);
   });
 
   describe('findElementByAttributes', function() {
     let client;
 
-    before(function() {
+    before(function () {
+      this.timeout(5000);
       client = coldBrew.createClient();
     });
 
@@ -55,6 +51,7 @@ describe('coldBrew', function () {
     let client;
 
     before(function () {
+      this.timeout(5000);
       client = coldBrew.createClient();
     });
 
@@ -120,7 +117,7 @@ describe('coldBrew', function () {
   describe('waitUntilRTCEvents', function () {
     let client1, client2;
 
-    before(function () {
+    beforeEach(function () {
       client1 = coldBrew.createClient();
       client2 = coldBrew.createClient();
     });
@@ -131,14 +128,90 @@ describe('coldBrew', function () {
       client1.get(ADDRESS);
       client2.get(ADDRESS);
 
-      client1.waitUntilRTCEvents(
-        'signalingstatechange'
-      ).then((occurred) => {if (occurred) done()});
+      client1.waitUntilRTCEvents([
+        'signalingstatechange',
+        'addstream',
+        'datachannel'
+      ]).then((occurred) => { if (occurred) done() });
     });
 
-    after(function (done) {
+    it('should detect that RTC events have occurred in a certain order', function (done) {
+      this.timeout(30000);
+
+      client1.get(ADDRESS);
+      client2.get(ADDRESS);
+
+      client1.waitUntilRTCEvents([
+        'signalingstatechange',
+        'addstream'
+      ], {
+        inOrder: true,
+      }).then((occurred) => { if (occurred) done() });
+    });
+
+    it('should not be able to detect an event that has not occurred', function (done) {
+      this.timeout(10000);
+
+      client1.get(ADDRESS);
+      client2.get(ADDRESS);
+
+      client1.waitUntilRTCEvents([
+        'thiseventshouldnotexist',
+        'orthisone',
+      ], {}, 3000)
+        .then((occurred) => {
+          if (occurred) {
+            done(new Error('waitUntilRTCEvents reported that a non-existent event occurred'))
+          }
+        })
+        .catch((err) => { if (err) done() });
+    });
+
+    afterEach(function (done) {
       client1.quit();
       client2.quit().then(() => done());
     });
+  });
+
+  describe('waitUntilSendSignaling', function () {
+    beforeEach(function () {
+      client1 = coldBrew.createClient();
+      client2 = coldBrew.createClient();
+    })
+
+    it('should be able to detect that signaling events have occurred', function (done) {
+      this.timeout(10000);
+
+      client1.get(ADDRESS);
+      client2.get(ADDRESS);
+
+      client1.waitUntilSendSignaling([
+        'join'
+      ]).then((occurred) => { if (occurred) done() });
+    });
+
+    it('should not be able to detect events that have not happened', function (done) {
+      this.timeout(10000);
+
+      client1.get(ADDRESS);
+      client2.get(ADDRESS);
+
+      client1.waitUntilSendSignaling([
+        'thiseventshouldnotexist'
+      ], 3000)
+        .then((occurred) => {
+          if (occurred) {
+            done(new Error('waitUntilSendSignaling detected nonexistant event'))
+          }
+        })
+        .catch((err) => {
+          if (err) done()
+        });
+    });
+
+    afterEach(function (done) {
+      client1.quit();
+      client2.quit().then(() => done());
+    })
   });
 });

@@ -16,7 +16,9 @@ function createClient() {
     .withCapabilities({
       browserName: 'chrome',
       chromeOptions: {
-        args: ['--use-fake-ui-for-media-stream']
+        args: [
+          '--use-fake-ui-for-media-stream',
+        ]
       }
     })
     .build()
@@ -47,24 +49,66 @@ function addColdBrewMethods(client) {
    * repeatedly if it is used within a webdriver.wait() call,
    * e.g. client.wait(client.untilRTCEvents('signalingstatechange', 'iceconnectionstatechange'))
    */
-  client.untilRTCEvents = function(...events) {
+  client.untilRTCEvents = function (events, options = {}) {
+    const { inOrder } = options;
+    if (inOrder && typeof inOrder !== 'boolean') {
+      throw new TypeError(
+        `Invalid option passed into untilRTCEvents: inOrder: ${inOrder}`
+      );
+    }
+
+    // Needs to return a plain function instead of a promise so that
+    // it will be executed repeatedly within the client.wait() function
+    //
+    // The plain function should return true if the events we are waiting
+    // for exist on the window object, false otherwise.
     return function() {
-      return client.executeScript(function(evts) {
-        return evts.every(windowHasEvent);
-
-        function windowHasEvent(eventName) {
-          if (!window.RTCEvents) return false;
-
-          for (let i = 0; i < window.RTCEvents.length; i++) {
-            console.log('checking event', eventName);
-            if(window.RTCEvents[i].type === eventName) {
-              return true;
-            }
-          }
-
+      return client.executeScript(function (events, inOrder) {
+        // Check to make sure coldBrewData has been initialized
+        if (!(window.coldBrewData && window.coldBrewData.RTCEvents)) {
           return false;
         }
-      }, events);
+
+        // Handle the case where the user doesn't care if the events
+        // happened in a certain order
+        if (!inOrder) {
+          const RTCEvents = window.coldBrewData.RTCEvents
+            .map(event => event.type);
+          
+          return events.every(eventType => RTCEvents.includes(eventType));
+        }
+
+        const p = document.createElement('p');
+        p.id = 'logMessage';
+        p.innerText = `${events}, ${JSON.stringify(window.coldBrewData.RTCEvents)}`;
+
+        document.body.appendChild(p);
+
+        // Handle the case where the user does care if the events
+        // happened in a certain order
+        const windowEvents = window.coldBrewData.RTCEvents
+          .map(event => event.type);
+        
+        return sameElementsInSameOrder(events, windowEvents);
+        
+        function sameElementsInSameOrder(arr1, arr2) {
+          let remainingArr2 = arr2;
+          return arr1.reduce((truth, element) => {
+            console.log("Current element:", element)
+            
+            if (!truth) return false;
+            
+            const index = remainingArr2.indexOf(element);
+            if (index === -1) {
+              console.log("Element not found in", remainingArr2)
+              return false;
+            }
+            
+            remainingArr2 = remainingArr2.slice(index);
+            return true;
+          }, true)
+        }
+      }, events, inOrder);
     }
   };
 
@@ -76,8 +120,35 @@ function addColdBrewMethods(client) {
    * @param   events description
    * @return {type}           description
    */
-  client.waitUntilRTCEvents = function(...events) {
-    return client.wait(client.untilRTCEvents(...events));
+  client.waitUntilRTCEvents = function (events, options, timeout) {
+    return client.wait(client.untilRTCEvents(events, options), timeout);
+  }
+
+  
+  client.untilSendSignaling = function (events) {
+    // Needs to return a plain function instead of a promise so that
+    // it will be executed repeatedly within the client.wait() function
+    //
+    // The plain function should return true if the events we are waiting
+    // for exist on the window object, false otherwise.
+    return function () {
+      return client.executeScript(function (events) {
+        // Check to make sure coldBrewData has been initialized
+        if (!(window.coldBrewData && window.coldBrewData.socketEvents)) {
+          return false;
+        }
+
+        const outgoingSocketEvents = window.coldBrewData.socketEvents.outgoing
+          .map(event => event.type);
+        
+        return events.every(eventName => outgoingSocketEvents.includes(eventName))
+      }, events)
+    }
+  }
+
+
+  client.waitUntilSendSignaling = function (events, timeout) {
+    return client.wait(client.untilSendSignaling(events), timeout);
   }
 
 
@@ -144,7 +215,7 @@ function addColdBrewMethods(client) {
         .catch((err) => {
           throw new TypeError(
             `No element found with selector ${selector}
-            and attributes ${attributes}`
+            and attributes ${JSON.stringify(attributes)}`
           );
         });
 
