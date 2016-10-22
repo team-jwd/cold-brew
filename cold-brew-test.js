@@ -49,24 +49,27 @@ function addColdBrewMethods(client) {
    * repeatedly if it is used within a webdriver.wait() call,
    * e.g. client.wait(client.untilRTCEvents('signalingstatechange', 'iceconnectionstatechange'))
    */
-  client.untilRTCEvents = function(events) {
+  client.untilRTCEvents = function (events, options = {}) {
+    const { inOrder } = options;
+    if (inOrder && typeof inOrder !== 'boolean') {
+      throw new TypeError(
+        `Invalid option passed into untilRTCEvents: inOrder: ${inOrder}`
+      );
+    }
+
     return function() {
-      return client.executeScript(function(evts) {
-        return evts.every(windowHasEvent);
-
-        function windowHasEvent(eventName) {
-          if (!window.RTCEvents) return false;
-
-          for (let i = 0; i < window.RTCEvents.length; i++) {
-            console.log('checking event', eventName);
-            if(window.RTCEvents[i].type === eventName) {
-              return true;
-            }
-          }
-
-          return false;
+      return client.executeScript(function (events, inOrder) {
+        if (!inOrder) {
+          return events.every((eventType) => {
+            return window.coldBrewData.RTCEvents
+              .map(event => event.type)
+              .includes(eventType)
+          });
         }
-      }, events);
+
+       // Need to implement functionality for inOrder === true;
+          
+      }, events, inOrder);
     }
   };
 

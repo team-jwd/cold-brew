@@ -1,9 +1,14 @@
-if (window.RTCEvents) throw new ColdBrewError(
-  'Cannot capture RTC events, window.RTCEvents property already exists');
+if (window.coldBrewData) throw new ColdBrewError(
+  'Cannot capture RTC events, window.coldBrewData property already exists');
 
-// Attach an RTCEvents array to the window object to keep a record of the
+// Attach a coldBrewData object to the window object to keep a record of the
 // events that fire on the RTCPeerConnection object
-window.RTCEvents = [];
+window.coldBrewData = {
+  RTCEvents: [],
+  socketEvents: [],
+  peerConnections: {},
+  sockets: {},
+};
 
 // An array of all of the events that fire on the RTCPeerConnection object
 const RTC_PEER_CONNECTION_EVENTS = [
@@ -52,7 +57,7 @@ function coldBrewRTC(servers, options, coldBrewConfig) {
   if (!production) {
     listeners.forEach((listener) => {
       peerConnection.addEventListener(listener, (event) => {
-        window.RTCEvents.push(event);
+        window.coldBrewData.RTCEvents.push(event);
       });
     });
   }
