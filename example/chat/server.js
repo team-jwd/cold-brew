@@ -43,3 +43,9 @@ app.get('/', (req, res) => {
 server.listen(3000, () => {
   console.log('listnin on 3k');
 });
+
+module.exports = {
+  resetNumClients: function (num) {
+    numClients = num;
+  },
+}
