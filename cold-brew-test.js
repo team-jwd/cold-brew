@@ -57,6 +57,11 @@ function addColdBrewMethods(client) {
       );
     }
 
+    // Needs to return a plain function instead of a promise so that
+    // it will be executed repeatedly within the client.wait() function
+    //
+    // The plain function should return true if the events we are waiting
+    // for exist on the window object, false otherwise.
     return function() {
       return client.executeScript(function (events, inOrder) {
         // Check to make sure coldBrewData has been initialized
@@ -120,18 +125,30 @@ function addColdBrewMethods(client) {
   }
 
   
-  client.untilSendSignaling = function(events) {
-    return client.executeScript(function (events) {
-      // Check to make sure coldBrewData has been initialized
-      if (!(window.coldBrewData && window.coldBrewData.RTCEvents)) {
-        return false;
-      }
-      
-      const outgoingSocketEvents = window.coldBrewData.socketEvents.outgoing
-        .map(event => event.type);
-      
-      return events.every(eventName => outgoingSocketEvents.includes(eventName))
-    }, events)
+  client.untilSendSignaling = function (events) {
+    // Needs to return a plain function instead of a promise so that
+    // it will be executed repeatedly within the client.wait() function
+    //
+    // The plain function should return true if the events we are waiting
+    // for exist on the window object, false otherwise.
+    return function () {
+      return client.executeScript(function (events) {
+        // Check to make sure coldBrewData has been initialized
+        if (!(window.coldBrewData && window.coldBrewData.socketEvents)) {
+          return false;
+        }
+
+        const outgoingSocketEvents = window.coldBrewData.socketEvents.outgoing
+          .map(event => event.type);
+        
+        return events.every(eventName => outgoingSocketEvents.includes(eventName))
+      }, events)
+    }
+  }
+
+
+  client.waitUntilSendSignaling = function (events, timeout) {
+    return client.wait(client.untilSendSignaling(events), timeout);
   }
 
 

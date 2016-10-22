@@ -158,7 +158,7 @@ describe('coldBrew', function () {
       client1.waitUntilRTCEvents([
         'thiseventshouldnotexist',
         'orthisone',
-      ], {}, 6000)
+      ], {}, 3000)
         .then((occurred) => {
           if (occurred) {
             done(new Error('waitUntilRTCEvents reported that a non-existent event occurred'))
@@ -173,7 +173,7 @@ describe('coldBrew', function () {
     });
   });
 
-  describe('waitUntilSignalingEvents', function () {
+  describe('waitUntilSendSignaling', function () {
     beforeEach(function () {
       client1 = coldBrew.createClient();
       client2 = coldBrew.createClient();
@@ -188,6 +188,25 @@ describe('coldBrew', function () {
       client1.waitUntilSendSignaling([
         'join'
       ]).then((occurred) => { if (occurred) done() });
+    });
+
+    it('should not be able to detect events that have not happened', function (done) {
+      this.timeout(10000);
+
+      client1.get(ADDRESS);
+      client2.get(ADDRESS);
+
+      client1.waitUntilSendSignaling([
+        'thiseventshouldnotexist'
+      ], 3000)
+        .then((occurred) => {
+          if (occurred) {
+            done(new Error('waitUntilSendSignaling detected nonexistant event'))
+          }
+        })
+        .catch((err) => {
+          if (err) done()
+        });
     });
 
     afterEach(function (done) {
