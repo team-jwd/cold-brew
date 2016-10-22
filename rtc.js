@@ -5,7 +5,10 @@ if (window.coldBrewData) throw new ColdBrewError(
 // events that fire on the RTCPeerConnection object
 window.coldBrewData = {
   RTCEvents: [],
-  socketEvents: [],
+  socketEvents: {
+    outgoing: [],
+    incoming: [],
+  },
   peerConnections: {},
   sockets: {},
 };
@@ -66,9 +69,68 @@ function coldBrewRTC(servers, options, coldBrewConfig) {
 }
 
 
+function observeSignaling(socket) {
+  return new Proxy(socket, {
+    get: function (target, key, receiver) {
+      let type, data, callback;
+
+      switch (key) {
+        case 'emit':
+          // emit can be called with 1 to 3 arguments:
+          // type
+          // type, data
+          // type, callback
+          // type, data, callback
+          // Therefore, we need to parse the arguments
+          return function (...args) {
+            const type = args[0];
+
+            if (args[1]) {
+              if (typeof args[1] === 'function') callback = args[1];
+              else data = args[1];
+            }
+
+            if (args[2]) {
+              if (typeof args[2] === 'function') callback = args[2];
+            }
+
+            window.coldBrewData.socketEvents.outgoing.push({
+              type,
+              data,
+              callback
+            });
+
+            return target.emit(...args)
+          }
+        
+        case 'on':
+          // on always takes two arguments: the type of event and the callback
+          return function (type, callback) {
+            target.on(type, (...data) => {
+              window.coldBrewData.socketEvents.incoming.push({
+                type,
+                data,
+                callback
+              });
+
+              callback(...data)
+            });
+          }
+        default:
+          return target[key];
+      }
+    }
+  });
+}
+
+
 class ColdBrewError extends Error {};
 
 if (typeof module !== 'undefined') {
-  module.exports = { coldBrewRTC, RTC_PEER_CONNECTION_EVENTS };
+  module.exports = {
+    coldBrewRTC,
+    observeSignaling,
+    RTC_PEER_CONNECTION_EVENTS,
+  };
 }
 

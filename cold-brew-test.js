@@ -119,6 +119,21 @@ function addColdBrewMethods(client) {
     return client.wait(client.untilRTCEvents(events, options), timeout);
   }
 
+  
+  client.untilSendSignaling = function(events) {
+    return client.executeScript(function (events) {
+      // Check to make sure coldBrewData has been initialized
+      if (!(window.coldBrewData && window.coldBrewData.RTCEvents)) {
+        return false;
+      }
+      
+      const outgoingSocketEvents = window.coldBrewData.socketEvents.outgoing
+        .map(event => event.type);
+      
+      return events.every(eventName => outgoingSocketEvents.includes(eventName))
+    }, events)
+  }
+
 
   /**
    * findElementByAttributes - allows the webdriver to locate elements
