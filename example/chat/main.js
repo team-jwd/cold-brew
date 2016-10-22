@@ -36,7 +36,7 @@ $(document).ready(() => {
   let sendVideo = $('#sendVideo');
   sendVideo.attr('disabled', true);
 
-  socket = io();
+  socket = observeSignaling(io());
   $('form').on('submit', (e) => {
     e.preventDefault();
   });
