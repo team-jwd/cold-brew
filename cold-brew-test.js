@@ -16,7 +16,9 @@ function createClient() {
     .withCapabilities({
       browserName: 'chrome',
       chromeOptions: {
-        args: ['--use-fake-ui-for-media-stream']
+        args: [
+          '--use-fake-ui-for-media-stream',
+        ]
       }
     })
     .build()
@@ -47,7 +49,7 @@ function addColdBrewMethods(client) {
    * repeatedly if it is used within a webdriver.wait() call,
    * e.g. client.wait(client.untilRTCEvents('signalingstatechange', 'iceconnectionstatechange'))
    */
-  client.untilRTCEvents = function(...events) {
+  client.untilRTCEvents = function(events) {
     return function() {
       return client.executeScript(function(evts) {
         return evts.every(windowHasEvent);
@@ -76,8 +78,8 @@ function addColdBrewMethods(client) {
    * @param   events description
    * @return {type}           description
    */
-  client.waitUntilRTCEvents = function(...events) {
-    return client.wait(client.untilRTCEvents(...events));
+  client.waitUntilRTCEvents = function(events) {
+    return client.wait(client.untilRTCEvents(events));
   }
 
 
