@@ -55,6 +55,7 @@ describe('coldBrew', function () {
     let client;
 
     before(function () {
+      this.timeout(5000);
       client = coldBrew.createClient();
     });
 
@@ -131,9 +132,11 @@ describe('coldBrew', function () {
       client1.get(ADDRESS);
       client2.get(ADDRESS);
 
-      client1.waitUntilRTCEvents(
-        'signalingstatechange'
-      ).then((occurred) => {if (occurred) done()});
+      client1.waitUntilRTCEvents([
+        'signalingstatechange',
+        'addstream',
+        'datachannel'
+      ]).then((occurred) => { if (occurred) done() });
     });
 
     after(function (done) {
