@@ -121,7 +121,7 @@ describe('coldBrew', function () {
   describe('waitUntilRTCEvents', function () {
     let client1, client2;
 
-    before(function () {
+    beforeEach(function () {
       client1 = coldBrew.createClient();
       client2 = coldBrew.createClient();
     });
@@ -139,7 +139,21 @@ describe('coldBrew', function () {
       ]).then((occurred) => { if (occurred) done() });
     });
 
-    after(function (done) {
+    it('should detect that RTC events have occurred in a certain order', function (done) {
+      this.timeout(10000);
+
+      client1.get(ADDRESS);
+      client2.get(ADDRESS);
+
+      client1.waitUntilRTCEvents([
+        'signalingstatechange',
+        'addstream',
+      ], {
+        inOrder: true,
+      }).then((occurred) => { if (occurred) done() });
+    });
+
+    afterEach(function (done) {
       client1.quit();
       client2.quit().then(() => done());
     });
