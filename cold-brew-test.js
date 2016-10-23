@@ -124,24 +124,52 @@ function addColdBrewMethods(client) {
   };
 
 
-  client.untilSendSignaling = function (events) {
+  client.untilSendSignaling = function (events, options = {}) {
     // Needs to return a plain function instead of a promise so that
     // it will be executed repeatedly within the client.wait() function
     //
     // The plain function should return true if the events we are waiting
     // for exist on the window object, false otherwise.
+
+    const { inOrder } = options;
+    if (inOrder && typeof inOrder !== 'boolean') {
+      throw new TypeError(
+        `Invalid option passed into untilSendSignaling: inOrder: ${inOrder}`
+      );
+    }
+
     return function () {
-      return client.executeScript(function (events) {
+      return client.executeScript(function (events, inOrder) {
         // Check to make sure coldBrewData has been initialized
         if (!(window.coldBrewData && window.coldBrewData.socketEvents)) {
           return false;
         }
 
-        const outgoingSocketEvents = window.coldBrewData.socketEvents.outgoing
+        if (!inOrder) {
+          const outgoingSocketEvents = window.coldBrewData.socketEvents.outgoing
+            .map(event => event.type);
+          return events.every(eventName => outgoingSocketEvents.includes(eventName));
+        }
+
+        const socketEvents = window.coldBrewData.socketEvents.outgoing
           .map(event => event.type);
 
-        return events.every(eventName => outgoingSocketEvents.includes(eventName));
-      }, events);
+        return sameElementsInSameOrder(events, socketEvents);
+
+        function sameElementsInSameOrder(arr1, arr2) {
+          let remainingArr2 = arr2;
+          return arr1.reduce((truth, element) => {
+            if (!truth) return false;
+
+            const index = remainingArr2.indexOf(element);
+            if (index === -1) {
+              return false;
+            }
+            remainingArr2 = remainingArr2.slice(index);
+            return true;
+          }, true);
+        }
+      }, events, inOrder);
     };
   };
 
@@ -150,17 +178,42 @@ function addColdBrewMethods(client) {
     return client.wait(client.untilSendSignaling(events), timeout);
   };
 
-  client.untilRecieveSignaling = function (events) {
+  client.untilRecieveSignaling = function (events, options = {}) {
+    const { inOrder } = options;
+    if (inOrder && typeof inOrder !== 'boolean') {
+      throw new TypeError(
+        `Invalid option passed into untilRecieveSignaling: inOrder: ${inOrder}`
+      );
+    }
     return function () {
-      return client.executeScript(function (events) {
+      return client.executeScript(function (events, inOrder) {
         if (!(window.coldBrewData && window.coldBrewData.socketEvents)) {
           return false;
         }
-
-        const incomingSocketEvents = window.coldBrewData.socketEvents.incoming
+        if (!inOrder) {
+          const incomingSocketEvents = window.coldBrewData.socketEvents.incoming
+            .map(event => event.type);
+          return events.every(eventName => incomingSocketEvents.includes(eventName));
+        }
+        const socketEvents = window.coldBrewData.socketEvents.incoming
           .map(event => event.type);
-        return events.every(eventName => incomingSocketEvents.includes(eventName));
-      }, events);
+
+        return sameElementsInSameOrder(events, socketEvents);
+
+        function sameElementsInSameOrder(arr1, arr2) {
+          let remainingArr2 = arr2;
+          return arr1.reduce((truth, element) => {
+            if (!truth) return false;
+
+            const index = remainingArr2.indexOf(element);
+            if (index === -1) {
+              return false;
+            }
+            remainingArr2 = remainingArr2.slice(index);
+            return true;
+          }, true);
+        }
+      }, events, inOrder);
     };
   };
 
