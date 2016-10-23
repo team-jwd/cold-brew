@@ -194,7 +194,7 @@ function prepareToReceiveOffer(socket, peerConnection) {
   socket.on('receive offer', (offer) => {
     peerConnection.setRemoteDescription(offer);
 
-    //before answer, initiateVideo
+    // before answer, initiateVideo
     let initiatedVideo = initiateLocalVideo(peerConnection);
 
     initiatedVideo.then(function() {
