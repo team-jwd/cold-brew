@@ -201,7 +201,7 @@ describe('coldBrew', function () {
 
       client1.waitUntilSendSignaling([
         'thiseventshouldnotexist',
-      ], 3000)
+      ], {}, 3000)
         .then((occurred) => {
           if (occurred) {
             done(new Error('waitUntilSendSignaling detected nonexistant event'));
@@ -218,7 +218,7 @@ describe('coldBrew', function () {
     });
   });
 
-  describe('Wait until recieve signaling', function () {
+  describe('Wait until receive signaling', function () {
     beforeEach(function () {
       client1 = coldBrew.createClient();
       client2 = coldBrew.createClient();
@@ -246,7 +246,7 @@ describe('coldBrew', function () {
 
       client2.waitUntilSendSignaling(['send offer']);
 
-      client1.waitUntilReceiveSignaling(['Im a walrus', 'I have a kitten friend'], 3000)
+      client1.waitUntilReceiveSignaling(['Im a walrus', 'I have a kitten friend'], {}, 3000)
         .then((occured) => {
           done(new Error('waitUntilRecieveSignaling detected nonexistant event'));
         }).catch((e) => {
@@ -255,6 +255,21 @@ describe('coldBrew', function () {
           }
         });
     });
+
+    it('should detect that Socket events have occurred in a certain order', function (done) {
+      this.timeout(30000);
+
+      client1.get(ADDRESS);
+      client2.get(ADDRESS);
+
+      client2.waitUntilSendSignaling([
+        'join',
+        'send offer',
+      ], {
+        inOrder: true,
+      }).then((occurred) => { if (occurred) done(); });
+    });
+
 
     afterEach(function (done) {
       client1.quit();
