@@ -178,7 +178,7 @@ function addColdBrewMethods(client) {
     return client.wait(client.untilSendSignaling(events), timeout);
   };
 
-  client.untilRecieveSignaling = function (events) {
+  client.untilRecieveSignaling = function (events, options = {}) {
     const { inOrder } = options;
     if (inOrder && typeof inOrder !== 'boolean') {
       throw new TypeError(
