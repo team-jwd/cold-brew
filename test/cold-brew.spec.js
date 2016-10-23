@@ -212,6 +212,20 @@ describe('coldBrew', function () {
         });
     });
 
+    it('should detect that Socket events emitted in a certain order', function (done) {
+      this.timeout(30000);
+
+      client1.get(ADDRESS);
+      client2.get(ADDRESS);
+
+      client2.waitUntilSendSignaling([
+        'join',
+        'send offer',
+      ], {
+        inOrder: true,
+      }).then((occurred) => { if (occurred) done(); });
+    });
+
     afterEach(function (done) {
       client1.quit();
       client2.quit().then(() => done());
@@ -256,15 +270,15 @@ describe('coldBrew', function () {
         });
     });
 
-    it('should detect that Socket events have occurred in a certain order', function (done) {
+    it('should detect that Socket events have been recieved in a certain order', function (done) {
       this.timeout(30000);
 
       client1.get(ADDRESS);
       client2.get(ADDRESS);
 
-      client2.waitUntilSendSignaling([
-        'join',
-        'send offer',
+      client1.waitUntilReceiveSignaling([
+        'receive offer',
+        'receive ice candidate',
       ], {
         inOrder: true,
       }).then((occurred) => { if (occurred) done(); });
