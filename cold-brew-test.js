@@ -174,8 +174,8 @@ function addColdBrewMethods(client) {
   };
 
 
-  client.waitUntilSendSignaling = function (events, timeout) {
-    return client.wait(client.untilSendSignaling(events), timeout);
+  client.waitUntilSendSignaling = function (events, options, timeout) {
+    return client.wait(client.untilSendSignaling(events, options), timeout);
   };
 
   client.untilRecieveSignaling = function (events, options = {}) {
@@ -217,8 +217,8 @@ function addColdBrewMethods(client) {
     };
   };
 
-  client.waitUntilReceiveSignaling = function (events, timeout) {
-    return client.wait(client.untilRecieveSignaling(events), timeout);
+  client.waitUntilReceiveSignaling = function (events, options, timeout) {
+    return client.wait(client.untilRecieveSignaling(events, options), timeout);
   };
 
   /**
