@@ -139,7 +139,7 @@ function addColdBrewMethods(client) {
     }
 
     return function () {
-      return client.executeScript(function (events) {
+      return client.executeScript(function (events, inOrder) {
         // Check to make sure coldBrewData has been initialized
         if (!(window.coldBrewData && window.coldBrewData.socketEvents)) {
           return false;
@@ -186,7 +186,7 @@ function addColdBrewMethods(client) {
       );
     }
     return function () {
-      return client.executeScript(function (events) {
+      return client.executeScript(function (events, inOrder) {
         if (!(window.coldBrewData && window.coldBrewData.socketEvents)) {
           return false;
         }
