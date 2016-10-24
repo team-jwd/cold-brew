@@ -5,7 +5,6 @@ const http = require('http');
 const server = http.createServer(app);
 const io = require('socket.io')(server);
 const path = require('path');
-const bodyParser = require('body-parser');
 
 let numClients = 0;
 io.on('connection', (socket) => {
@@ -30,9 +29,6 @@ io.on('connection', (socket) => {
     numClients--;
   });
 });
-
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 
 app.use(express.static(__dirname));
 

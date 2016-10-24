@@ -212,6 +212,7 @@ function prepareToReceiveOffer(socket, peerConnection) {
 
 function handleIncomingMessage(message) {
   const messageElement = $('<p></p>', { class: 'message' });
+  messageElement.class = 'message';
   messageElement.text(message);
   $('#chat-window').append(messageElement);
 }

@@ -1,22 +1,27 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <link href="./styles.css" rel="stylesheet">
     <script type="text/javascript" src="./node_modules/webrtc-adapter/out/adapter.js" charset="utf-8"></script>
   </head>
   <body>
     <main id="container">
-      <div id="chat-window">
-      </div>
-      <form>
-        <input type="text" placeholder="Type a message...">
-        <button id='sendMessage' type="submit">Send!</button>
-      </form>
-      
-      <button id="getVideo">Get Video</button>
-      <button id="sendVideo">Send Video</button>
-      <div id="video-window">
-        <video id='localVideo' autoplay></video>
-        <video id='remoteVideo' autoplay></video>
+      <h1>Cold Brew Example Application</h1>
+      <div id="chat-video">
+        <div id="text-chat">
+          <div id="chat-window">
+
+          </div>
+          <form>
+            <input type="text" placeholder="Type a message...">
+            <button id='sendMessage' type="submit">Send!</button>
+          </form>
+        </div>
+        <div id="video-window">
+          <!-- uncomment the following line to see your own local video stream -->
+          <!-- <video id='localVideo' autoplay></video> -->
+          <video id='remoteVideo' autoplay></video>
+        </div>
       </div>
     </main>
     <script>console.log(`%c     Cold Brew Rocks`, 'color:#00ffcb; font-size: 100px; text-shadow: 0 0 10px #FF0034, 0 0 20px black; font-weight: 900; ');</script>
