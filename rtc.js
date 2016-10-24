@@ -15,6 +15,7 @@ if (window.coldBrewData) {
 // events that fire on the RTCPeerConnection object
 window.coldBrewData = {
   RTCEvents: [],
+  RTCDataChannelEvents: [],
   socketEvents: {
     outgoing: [],
     incoming: [],
@@ -41,6 +42,13 @@ const RTC_PEER_CONNECTION_EVENTS = [
   'track',
 ];
 
+const RTC_DATA_CHANNEL_EVENTS = [
+  'bufferedamountlow',
+  'close',
+  'error',
+  'message',
+  'open',
+];
 
 /**
  * coldBrewRTC - Factory function that creates and returns an RTCPeerCOnnection
@@ -53,7 +61,8 @@ const RTC_PEER_CONNECTION_EVENTS = [
  * @param  {type} coldBrewConfig description
  * @return {type}                description
  */
-function coldBrewRTC(servers, options, coldBrewConfig) {
+function coldBrewRTC(servers, options, coldBrewConfig, dataChannelConfig) {
+  // setup config for RTCPeerConnection
   coldBrewConfig = coldBrewConfig || {};
 
   const production = coldBrewConfig.production || false;
@@ -67,6 +76,19 @@ function coldBrewRTC(servers, options, coldBrewConfig) {
       'Invalid event names passed in to coldBrewRTC');
   }
 
+  // setup config for dataChannelConfig
+  dataChannelConfig = dataChannelConfig || {};
+  
+  const dataListeners = dataChannelConfig.listeners || RTC_DATA_CHANNEL_EVENTS;
+
+  const dataValid = dataListeners.every(listener =>
+    RTC_DATA_CHANNEL_EVENTS.includes(listener));
+
+  if (!dataValid) {
+    throw new ColdBrewError(
+      'Invalid data channel event names passed in to coldBrewRTC');
+  } 
+
   const peerConnection = new RTCPeerConnection(servers, options);
 
   if (!production) {
@@ -75,13 +97,28 @@ function coldBrewRTC(servers, options, coldBrewConfig) {
         window.coldBrewData.RTCEvents.push(event);
       });
     });
+
+    const createDataChannel = peerConnection.createDataChannel.bind(peerConnection);
+
+    peerConnection.createDataChannel = function (...args) {
+      const newDataChannel = createDataChannel(...args);
+      dataListeners.forEach((listener) => {
+        newDataChannel.addEventListener(listener, (event) => {
+          window.coldBrewData.RTCDataChannelEvents.push(event)
+        });
+      });
+
+      return newDataChannel;
+    }
   }
 
   return peerConnection;
 }
 
 
-function observeSignaling(socket) {
+function observeSignaling(socket, options = {}) {
+  if (options.production === true) return socket;
+
   return new Proxy(socket, {
     get(target, key, receiver) {
       let type;
