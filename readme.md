@@ -205,7 +205,7 @@ The client-side module exposes the following functions and objects:
 <a name="cold-brew-rtc"></a>
 **coldBrewRTC(configuration, options, coldBrewConfig)**
 
-Factory function that creates and returns an RTCPeerConnection object. In
+A factory function that creates and returns an RTCPeerConnection object. In
 order to be able to observe the RTCPeerConnection's events from
 within your test script, the RTCPeerConnection needs to be created using this
 function rather than the standard RTCPeerConnection constructor
@@ -304,6 +304,7 @@ Returns:
 
 Usage example:
 ```javascript
+// If you want more control over client configuration, you can do this...
 const client = new selenium.Builder()
   .usingServer()
   .withCapabilities({
@@ -312,6 +313,10 @@ const client = new selenium.Builder()
   .build();
 
 coldBrew.addColdBrewMethods(client);
+
+// ... instead of this:
+const client = coldBrew.createClient();
+
 ```
 When a WebDriver instance is create using `coldBrew.createClient()` or passed into the `coldBrew.addColdBrewMethods`
 function, the following methods are added to it:
@@ -346,6 +351,9 @@ with the [coldBrewRTC factory function](#cold-brew-rtc).
 Usage example:
 ```javascript
 // Using this method in a mocha test
+const PORT = '3000'; // Or the port that you are running your server on.
+const ADDRESS = `http://localhost:${PORT}`;
+
 describe('RTCPeerConnection', function() {
   it('should signal to the other client and open a data channel', function(done) {
     this.timeout(5000);
@@ -353,14 +361,14 @@ describe('RTCPeerConnection', function() {
     const client1 = coldBrew.createClient();
     const client2 = coldBrew.createClient();
 
-    client1.get('https://www.example.com');
-    client2.get('https://www.example.com');
+    client1.get(ADDRESS);
+    client2.get(ADDRESS);
 
     client1.wait(client1.untilRTCEvents([
       'signalingstatechange',
-      'datachannel'
+      'datachannel',
     ], {
-      inOrder: true
+      inOrder: true,
     }))
       .then((occurred) => {if (occurred) done()});
   });
@@ -375,6 +383,9 @@ Convenience method, equivalent to invoking `client.wait(client.untilRTCEvents(ev
 Usage example:
 ```javascript
 // Refactor the previous test to use waitUntilRTCEvents
+const PORT = '3000'; // Or the port that you are running your server on.
+const ADDRESS = `http://localhost:${PORT}`;
+
 describe('RTCPeerConnection', function() {
   it('should signal to the other client and open a data channel', function(done) {
     this.timeout(5000);
@@ -382,10 +393,15 @@ describe('RTCPeerConnection', function() {
     const client1 = coldBrew.createClient();
     const client2 = coldBrew.createClient();
 
-    client1.get('https://www.example.com');
-    client2.get('https://www.example.com');
+    client1.get(ADDRESS);
+    client2.get(ADDRESS);
 
-    client1.waituntilRTCEvents(['signalingstatechange', 'datachannel'])
+    client1.waituntilRTCEvents([
+      'signalingstatechange', 
+      'datachannel'
+    ], {
+      inOrder: true,
+    })
       .then((occurred) => {if (occurred) done()});
   });
 });
@@ -412,6 +428,9 @@ by the [observeSignaling](#observe-signaling) function in the client-side code.
 Usage example:
 ```javascript
 // Using this method in a mocha test
+const PORT = '3000'; // Or the port that you are running your server on.
+const ADDRESS = `http://localhost:${PORT}`;
+
 describe('signaling socket', function() {
   it('should emit an offer and ICE candidates to the other client', function(done) {
     this.timeout(5000);
@@ -419,14 +438,14 @@ describe('signaling socket', function() {
     const client1 = coldBrew.createClient();
     const client2 = coldBrew.createClient();
 
-    client1.get('https://www.example.com');
-    client2.get('https://www.example.com');
+    client1.get(ADDRESS);
+    client2.get(ADDRESS);
 
     client2.wait(client2.untilSendSignaling([
       'send offer',
-      'send ice candidate'
+      'send ice candidate',
     ], {
-      inOrder: true
+      inOrder: true,
     }))
       .then((occurred) => {if (occurred) done()});
   });
@@ -441,6 +460,9 @@ Convenience method, equivalent to invoking `client.wait(client.untilSendSignalin
 Usage example:
 ```javascript
 // Refactor the previous test to use client.waitUntilSendSignaling
+const PORT = '3000'; // Or the port that you are running your server on.
+const ADDRESS = `http://localhost:${PORT}`;
+
 describe('signaling socket', function() {
   it('should emit an offer and ICE candidates to the other client', function(done) {
     this.timeout(5000);
@@ -448,14 +470,14 @@ describe('signaling socket', function() {
     const client1 = coldBrew.createClient();
     const client2 = coldBrew.createClient();
 
-    client1.get('https://www.example.com');
-    client2.get('https://www.example.com');
+    client1.get(ADDRESS);
+    client2.get(ADDRESS);
 
     client2.waitUntilSendSignaling([
       'send offer',
-      'send ice candidate'
+      'send ice candidate',
     ], {
-      inOrder: true
+      inOrder: true,
     })
       .then((occurred) => {if (occurred) done()});
   });
@@ -483,6 +505,9 @@ by the [observeSignaling](#observe-signaling) function in the client-side code.
 Usage example:
 ```javascript
 // Using this method in a mocha test
+const PORT = '3000'; // Or the port that you are running your server on.
+const ADDRESS = `http://localhost:${PORT}`;
+
 describe('signaling socket', function() {
   it('should receive an offer and ICE candidates from the other client', function(done) {
     this.timeout(5000);
@@ -490,14 +515,14 @@ describe('signaling socket', function() {
     const client1 = coldBrew.createClient();
     const client2 = coldBrew.createClient();
 
-    client1.get('https://www.example.com');
-    client2.get('https://www.example.com');
+    client1.get(ADDRESS);
+    client2.get(ADDRESS);
 
     client1.wait(client1.untilReceiveSignaling([
       'receive offer',
-      'receive ice candidate'
+      'receive ice candidate',
     ], {
-      inOrder: true
+      inOrder: true,
     }))
       .then((occurred) => {if (occurred) done()});
   });
@@ -512,6 +537,9 @@ Convenience method, equivalent to invoking `client.wait(client.untilReceiveSigna
 Usage example:
 ```javascript
 // Refactor the previous example to use client.waitUntilReceiveSignaling
+const PORT = '3000'; // Or the port that you are running your server on.
+const ADDRESS = `http://localhost:${PORT}`;
+
 describe('signaling socket', function() {
   it('should receive an offer and ICE candidates from the other client', function(done) {
     this.timeout(5000);
@@ -519,14 +547,14 @@ describe('signaling socket', function() {
     const client1 = coldBrew.createClient();
     const client2 = coldBrew.createClient();
 
-    client1.get('https://www.example.com');
-    client2.get('https://www.example.com');
+    client1.get(ADDRESS);
+    client2.get(ADDRESS);
 
     client1.waitUntilReceiveSignaling([
       'receive offer',
-      'receive ice candidate'
+      'receive ice candidate',
     ], {
-      inOrder: true
+      inOrder: true,
     })
       .then((occurred) => {if (occurred) done()});
   });
@@ -544,7 +572,7 @@ Parameters:
 * *selector*: A CSS selector to locate the element
 * *attributes*: An object containing attributes to filter the results of the CSS selector
 
-Returns: A WebElementPromise matching the CSS selector and the given attributes.
+Returns: A [WebElementPromise](http://seleniumhq.github.io/selenium/docs/api/javascript/module/selenium-webdriver/lib/webdriver_exports_WebElementPromise.html) matching the CSS selector and the given attributes.
 Resolves with the WebElement if the element is located or rejects with
 TypeError if not.
 
@@ -554,7 +582,7 @@ Usage example:
 client.findElementByAttributes('nav button', { innerText: 'Logout' });
 
 // Locate the input element inside the login form with a placeholder of "password"
-client.findElementByAttribute('#login-form input', { placeholder: 'password' });
+client.findElementByAttributes('#login-form input', { placeholder: 'password' });
 ```
 
 <a name="client-do"></a>
@@ -584,7 +612,7 @@ Usage example:
 // on the following view.
 
 // Without client.do:
-client.get('https://www.example.com');
+client.get(ADDRESS);
 client.findElementByAttributes('.login-btn', { innerText: 'Login' })
   .click()
 client.findElementByAttributes('.login-form input', { placeholder: 'username' })
@@ -607,7 +635,7 @@ client.findElement(By.css('#create-form button'))
 
 
 // With client.do:
-client.get('https://www.example.com');
+client.get(ADDRESS);
 client.do([
   ['click', '.login-btn', {innerText: 'Login'}],
   ['sendKeys', '.login-form input', { placeholder: 'username' }, 'dking'],
