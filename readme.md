@@ -48,12 +48,12 @@ In this file, place the following code:
 ```javascript
 const coldBrew = require('cold-brew');
 const selenium = require('selenium-webdriver');
-const { until } = selenium;
+const { until, Key } = selenium;
 
 const client = coldBrew.createClient();
 
-describe('ColdBrew client', function() {
-  it('should be able to navigate to google.com', function(done) {
+describe('ColdBrew client', function () {
+  it('should be able to navigate to google.com', function (done) {
     this.timeout(10000);
 
     client.get('https://www.google.com');
@@ -61,7 +61,7 @@ describe('ColdBrew client', function() {
       .then(() => done());
   });
 
-  after(function(done) {
+  after(function (done) {
     client.quit().then(() => done());
   });
 });
@@ -101,10 +101,11 @@ describe('ColdBrew client', function () {
     this.timeout(10000);
 
     client.get('https://www.google.com');
-    client.wait(until.titleIs('Google')).then(() => done());
+    client.wait(until.titleIs('Google'))
+      .then(() => done());
   });
 
-  it('should be able to do a Google search', function(done) {
+  it('should be able to do a Google search', function (done) {
     this.timeout(10000);
 
     // Navigate to google.com
@@ -196,10 +197,19 @@ const { coldBrewRTC } = require('cold-brew/rtc');
 import { coldBrewRTC } from 'cold-brew/rtc';
 ```
 #### API
+The client-side module exposes the following functions and objects:
+* [coldBrewRTC(configuration, options, coldBrewConfig)](#cold-brew-rtc)
+* [observeSignaling(socket)](#observe-signaling)
+* [RTC\_PEER\_CONNECTION\_EVENTS](#rtc-peer-connection-events)
+
 <a name="cold-brew-rtc"></a>
 **coldBrewRTC(configuration, options, coldBrewConfig)**
 
-Factory function that creates and returns an RTCPeerConnection object.
+Factory function that creates and returns an RTCPeerConnection object. In
+order to be able to observe the RTCPeerConnection's events from
+within your test script, the RTCPeerConnection needs to be created using this
+function rather than the standard RTCPeerConnection constructor
+(see the usage example below).
 
 Parameters:
 * *configuration*: An object specifying the configuration options for the RTCPeerConnection object. Identical to the first parameter of the [RTCPeerConnection constructor](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/RTCPeerConnection).
@@ -226,7 +236,31 @@ const peerConnection = coldBrewRTC(
 );
 ```
 
-<a name="rtc-peer-connection-events"></a> **RTC_PEER_CONNECTION_EVENTS**
+<a name="observe-signaling"></a>
+**observeSignaling(socket)**
+
+Modifies the behavior of a [Socket](http://socket.io/docs/client-api/#io(url:string,-opts:object):socket)
+so that the events it emits and receives can be visible to an external
+test script.
+
+Parameters:
+* *socket*: A [Socket](http://socket.io/docs/client-api/#io(url:string,-opts:object):socket)
+  object, as specified by the socket.io client API
+
+Returns: The Socket object that was passed in, modified to allow
+the events it emits and receives to be observed by an external test script.
+
+Usage example:
+```javascript
+// Instead of doing this...
+const socket = io();
+
+// ...do this
+const socket = observeSignaling(io());
+```
+
+<a name="rtc-peer-connection-events"></a>
+**RTC\_PEER\_CONNECTION\_EVENTS**
 
 Array containing the names of all of the events that fire on the [RTCPeerConnection object](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection).
 
@@ -279,15 +313,19 @@ const client = new selenium.Builder()
 
 coldBrew.addColdBrewMethods(client);
 ```
-When a WebDriver instance is passed into the `coldBrew.addColdBrewMethods`
-function, the following function are added to it:
-  * [client.untilRTCEvents(...events)](#client-until-rtc-events)
-  * [client.waitUntilRTCEvents(...events)](#client-wait-until-rtc-events)
+When a WebDriver instance is create using `coldBrew.createClient()` or passed into the `coldBrew.addColdBrewMethods`
+function, the following methods are added to it:
+  * [client.untilRTCEvents(events, options)](#client-until-rtc-events)
+  * [client.waitUntilRTCEvents(events, options, timeout)](#client-wait-until-rtc-events)
+  * [client.untilSendSignaling(events, options)](#client-until-send-signaling)
+  * [client.waitUntilSendSignaling(events, options, timeout)](#client-wait-until-send-signaling)
+  * [client.untilReceiveSignaling(events, options)](#client-until-receive-signaling)
+  * [client.waitUntilReceiveSignaling](#client-wait-until-receive-signaling)
   * [client.findElementByAttributes(selector, attributes)](#client-find-element-by-attributes)
   * [client.do(navigationEvents)](#client-do)
 
 <a name="client-until-rtc-events"></a>
-**client.untilRTCEvents(events)**
+**client.untilRTCEvents(events, options)**
 
 Returns a promise that will resolve with a truthy value when the specified
 events have fired on the RTCPeerConnection object.
@@ -295,6 +333,10 @@ events have fired on the RTCPeerConnection object.
 Parameters:
 * *events*: An array of names of events that fire on the RTCPeerConnection
   object in the browser
+* *options*: An object of configuration options. The following options are supported:
+  * inOrder: If true, the returned promise will only resolve if
+             the events occurred in the same order as the passed-in array.
+             Defaults to `false` if not provided.
 
 Returns: A promise that will resolve with a truthy value when the specified
 events have fired on the RTCPeerConnection object in the browser. Note: This
@@ -306,28 +348,37 @@ Usage example:
 // Using this method in a mocha test
 describe('RTCPeerConnection', function() {
   it('should signal to the other client and open a data channel', function(done) {
+    this.timeout(5000);
+    
     const client1 = coldBrew.createClient();
     const client2 = coldBrew.createClient();
 
     client1.get('https://www.example.com');
     client2.get('https://www.example.com');
 
-    client1.wait(client1.untilRTCEvents(['signalingstatechange', 'datachannel']))
+    client1.wait(client1.untilRTCEvents([
+      'signalingstatechange',
+      'datachannel'
+    ], {
+      inOrder: true
+    }))
       .then((occurred) => {if (occurred) done()});
   });
 });
 ```
 
 <a name="client-wait-until-rtc-events"></a>
-**client.waitUntilRTCEvents(events)**
+**client.waitUntilRTCEvents(events, options, timeout)**
 
-Convenience method, equivalent to invoking `client.wait(client.untilRTCEvents(events))`
+Convenience method, equivalent to invoking `client.wait(client.untilRTCEvents(events, options), timeout)`
 
 Usage example:
 ```javascript
 // Refactor the previous test to use waitUntilRTCEvents
 describe('RTCPeerConnection', function() {
   it('should signal to the other client and open a data channel', function(done) {
+    this.timeout(5000);
+    
     const client1 = coldBrew.createClient();
     const client2 = coldBrew.createClient();
 
@@ -335,6 +386,148 @@ describe('RTCPeerConnection', function() {
     client2.get('https://www.example.com');
 
     client1.waituntilRTCEvents(['signalingstatechange', 'datachannel'])
+      .then((occurred) => {if (occurred) done()});
+  });
+});
+```
+
+<a name="client-until-send-signaling"></a>
+**client.untilSendSignaling(events, options)**
+
+Returns a promise that will resolve with a truthy value when the specified
+events have been emitted by the local signaling socket.
+
+Parameters:
+* *events*: An array of names of events emitted by the local signaling socket
+* *options*: An object of configuration options. The following options are supported:
+  * inOrder: If true, the returned promise will only resolve if
+             the events occurred in the same order as the passed-in array.
+             Defaults to `false` if not provided.
+
+Returns: A promise that will resolve with a truthy value when the specified
+events have been emitted from the local signaling socket. Note: This
+method can only observe these events if the local signaling socket was modified
+by the [observeSignaling](#observe-signaling) function in the client-side code.
+
+Usage example:
+```javascript
+// Using this method in a mocha test
+describe('signaling socket', function() {
+  it('should emit an offer and ICE candidates to the other client', function(done) {
+    this.timeout(5000);
+
+    const client1 = coldBrew.createClient();
+    const client2 = coldBrew.createClient();
+
+    client1.get('https://www.example.com');
+    client2.get('https://www.example.com');
+
+    client2.wait(client2.untilSendSignaling([
+      'send offer',
+      'send ice candidate'
+    ], {
+      inOrder: true
+    }))
+      .then((occurred) => {if (occurred) done()});
+  });
+});
+```
+
+<a name="client-wait-until-send-signaling"></a>
+**client.waitUntilSendSignaling(events, options, timeout)**
+
+Convenience method, equivalent to invoking `client.wait(client.untilSendSignaling(events, options), timeout)`
+
+Usage example:
+```javascript
+// Refactor the previous test to use client.waitUntilSendSignaling
+describe('signaling socket', function() {
+  it('should emit an offer and ICE candidates to the other client', function(done) {
+    this.timeout(5000);
+
+    const client1 = coldBrew.createClient();
+    const client2 = coldBrew.createClient();
+
+    client1.get('https://www.example.com');
+    client2.get('https://www.example.com');
+
+    client2.waitUntilSendSignaling([
+      'send offer',
+      'send ice candidate'
+    ], {
+      inOrder: true
+    })
+      .then((occurred) => {if (occurred) done()});
+  });
+});
+```
+
+<a name="client-until-receive-signaling"></a>
+**client.untilReceiveSignaling(events, options)**
+
+Returns a promise that will resolve with a truthy value when the specified
+events have been received by the local signaling socket.
+
+Parameters:
+* *events*: An array of names of events received by the local signaling socket
+* *options*: An object of configuration options. The following options are supported:
+  * inOrder: If true, the returned promise will only resolve if
+             the events occurred in the same order as the passed-in array.
+             Defaults to `false` if not provided.
+
+Returns: A promise that will resolve with a truthy value when the specified
+events have been received by the local signaling socket. Note: This
+method can only observe these events if the local signaling socket was modified
+by the [observeSignaling](#observe-signaling) function in the client-side code.
+
+Usage example:
+```javascript
+// Using this method in a mocha test
+describe('signaling socket', function() {
+  it('should receive an offer and ICE candidates from the other client', function(done) {
+    this.timeout(5000);
+    
+    const client1 = coldBrew.createClient();
+    const client2 = coldBrew.createClient();
+
+    client1.get('https://www.example.com');
+    client2.get('https://www.example.com');
+
+    client1.wait(client1.untilReceiveSignaling([
+      'receive offer',
+      'receive ice candidate'
+    ], {
+      inOrder: true
+    }))
+      .then((occurred) => {if (occurred) done()});
+  });
+});
+```
+
+<a name="client-wait-until-receive-signaling"></a>
+**client.waitUntilReceiveSignaling(events, options, timeout)**
+
+Convenience method, equivalent to invoking `client.wait(client.untilReceiveSignaling(events, options), timeout)`
+
+Usage example:
+```javascript
+// Refactor the previous example to use client.waitUntilReceiveSignaling
+describe('signaling socket', function() {
+  it('should receive an offer and ICE candidates from the other client', function(done) {
+    this.timeout(5000);
+    
+    const client1 = coldBrew.createClient();
+    const client2 = coldBrew.createClient();
+
+    client1.get('https://www.example.com');
+    client2.get('https://www.example.com');
+
+    client1.waitUntilReceiveSignaling([
+      'receive offer',
+      'receive ice candidate'
+    ], {
+      inOrder: true
+    })
       .then((occurred) => {if (occurred) done()});
   });
 });
