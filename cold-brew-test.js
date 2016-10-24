@@ -1,3 +1,11 @@
+/* eslint no-use-before-define: 0 */
+/* eslint no-param-reassign: 0 */
+/* eslint no-undef: 0 */
+/* eslint no-unused-vars: 0 */
+/* eslint prefer-arrow-callback: 0 */
+/* eslint func-names: 0 */
+/* eslint no-shadow: 0 */
+
 const selenium = require('selenium-webdriver');
 
 const { By } = selenium;
@@ -11,17 +19,17 @@ const { By } = selenium;
  * methods attached
  */
 function createClient() {
-  let client = new selenium.Builder()
+  const client = new selenium.Builder()
     .usingServer()
     .withCapabilities({
       browserName: 'chrome',
       chromeOptions: {
         args: [
           '--use-fake-ui-for-media-stream',
-        ]
-      }
+        ],
+      },
     })
-    .build()
+    .build();
 
   return addColdBrewMethods(client);
 }
@@ -62,7 +70,7 @@ function addColdBrewMethods(client) {
     //
     // The plain function should return true if the events we are waiting
     // for exist on the window object, false otherwise.
-    return function() {
+    return function () {
       return client.executeScript(function (events, inOrder) {
         // Check to make sure coldBrewData has been initialized
         if (!(window.coldBrewData && window.coldBrewData.RTCEvents)) {
@@ -74,42 +82,33 @@ function addColdBrewMethods(client) {
         if (!inOrder) {
           const RTCEvents = window.coldBrewData.RTCEvents
             .map(event => event.type);
-          
+
           return events.every(eventType => RTCEvents.includes(eventType));
         }
-
-        const p = document.createElement('p');
-        p.id = 'logMessage';
-        p.innerText = `${events}, ${JSON.stringify(window.coldBrewData.RTCEvents)}`;
-
-        document.body.appendChild(p);
 
         // Handle the case where the user does care if the events
         // happened in a certain order
         const windowEvents = window.coldBrewData.RTCEvents
           .map(event => event.type);
-        
+
         return sameElementsInSameOrder(events, windowEvents);
-        
+
         function sameElementsInSameOrder(arr1, arr2) {
           let remainingArr2 = arr2;
           return arr1.reduce((truth, element) => {
-            console.log("Current element:", element)
-            
             if (!truth) return false;
-            
+
             const index = remainingArr2.indexOf(element);
             if (index === -1) {
-              console.log("Element not found in", remainingArr2)
               return false;
             }
-            
+
             remainingArr2 = remainingArr2.slice(index);
             return true;
-          }, true)
+          }, true);
         }
       }, events, inOrder);
-    }
+    };
   };
 
 
@@ -122,35 +121,105 @@ function addColdBrewMethods(client) {
    */
   client.waitUntilRTCEvents = function (events, options, timeout) {
     return client.wait(client.untilRTCEvents(events, options), timeout);
-  }
+  };
 
-  
-  client.untilSendSignaling = function (events) {
+
+  client.untilSendSignaling = function (events, options = {}) {
     // Needs to return a plain function instead of a promise so that
     // it will be executed repeatedly within the client.wait() function
     //
     // The plain function should return true if the events we are waiting
     // for exist on the window object, false otherwise.
+
+    const { inOrder } = options;
+    if (inOrder && typeof inOrder !== 'boolean') {
+      throw new TypeError(
+        `Invalid option passed into untilSendSignaling: inOrder: ${inOrder}`
+      );
+    }
+
     return function () {
-      return client.executeScript(function (events) {
+      return client.executeScript(function (events, inOrder) {
         // Check to make sure coldBrewData has been initialized
         if (!(window.coldBrewData && window.coldBrewData.socketEvents)) {
           return false;
         }
 
-        const outgoingSocketEvents = window.coldBrewData.socketEvents.outgoing
+        if (!inOrder) {
+          const outgoingSocketEvents = window.coldBrewData.socketEvents.outgoing
+            .map(event => event.type);
+          return events.every(eventName => outgoingSocketEvents.includes(eventName));
+        }
+
+        const socketEvents = window.coldBrewData.socketEvents.outgoing
           .map(event => event.type);
-        
-        return events.every(eventName => outgoingSocketEvents.includes(eventName))
-      }, events)
+
+        return sameElementsInSameOrder(events, socketEvents);
+
+        function sameElementsInSameOrder(arr1, arr2) {
+          let remainingArr2 = arr2;
+          return arr1.reduce((truth, element) => {
+            if (!truth) return false;
+
+            const index = remainingArr2.indexOf(element);
+            if (index === -1) {
+              return false;
+            }
+            remainingArr2 = remainingArr2.slice(index);
+            return true;
+          }, true);
+        }
+      }, events, inOrder);
+    };
+  };
+
+
+  client.waitUntilSendSignaling = function (events, options, timeout) {
+    return client.wait(client.untilSendSignaling(events, options), timeout);
+  };
+
+  client.untilRecieveSignaling = function (events, options = {}) {
+    const { inOrder } = options;
+    if (inOrder && typeof inOrder !== 'boolean') {
+      throw new TypeError(
+        `Invalid option passed into untilRecieveSignaling: inOrder: ${inOrder}`
+      );
     }
-  }
+    return function () {
+      return client.executeScript(function (events, inOrder) {
+        if (!(window.coldBrewData && window.coldBrewData.socketEvents)) {
+          return false;
+        }
+        if (!inOrder) {
+          const incomingSocketEvents = window.coldBrewData.socketEvents.incoming
+            .map(event => event.type);
+          return events.every(eventName => incomingSocketEvents.includes(eventName));
+        }
+        const socketEvents = window.coldBrewData.socketEvents.incoming
+          .map(event => event.type);
 
+        return sameElementsInSameOrder(events, socketEvents);
 
-  client.waitUntilSendSignaling = function (events, timeout) {
-    return client.wait(client.untilSendSignaling(events), timeout);
-  }
+        function sameElementsInSameOrder(arr1, arr2) {
+          let remainingArr2 = arr2;
+          return arr1.reduce((truth, element) => {
+            if (!truth) return false;
 
+            const index = remainingArr2.indexOf(element);
+            if (index === -1) {
+              return false;
+            }
+            remainingArr2 = remainingArr2.slice(index);
+            return true;
+          }, true);
+        }
+      }, events, inOrder);
+    };
+  };
+
+  client.waitUntilReceiveSignaling = function (events, options, timeout) {
+    return client.wait(client.untilRecieveSignaling(events, options), timeout);
+  };
 
   /**
    * findElementByAttributes - allows the webdriver to locate elements
@@ -166,13 +235,13 @@ function addColdBrewMethods(client) {
    * that is located by the given css selector AND possesses the given
    * attributes
    */
-  client.findElementByAttributes = function(selector, attributes) {
-    return client.findElement(By.js(function(selector, attributes) {
+  client.findElementByAttributes = function (selector, attributes) {
+    return client.findElement(By.js(function (selector, attributes) {
       let elements = Array.from(document.querySelectorAll(selector));
 
       Object.keys(attributes).forEach(attribute => {
         elements = elements.filter(element =>
-          element[attribute] === attributes[attribute])
+          element[attribute] === attributes[attribute]);
       });
 
       return elements[0];
@@ -198,7 +267,7 @@ function addColdBrewMethods(client) {
    *
    * @return undefined
    */
-  client.do = function(navigationEvents) {
+  client.do = function (navigationEvents) {
     const validInput = navigationEvents.every(event =>
       validNavigation(event));
 
@@ -220,24 +289,24 @@ function addColdBrewMethods(client) {
         });
 
       arr.push(navigationPromise);
-      
+
       return arr;
     }, []);
-    
+
     return selenium.promise.all(navigationPromises);
   };
 
 
   function validNavigation(navigationEvent) {
     return Array.isArray(navigationEvent) &&
-           ['click', 'sendKeys'].includes(navigationEvent[0]);
+      ['click', 'sendKeys'].includes(navigationEvent[0]);
   }
 
 
   return client;
 }
 
-class ColdBrewError extends Error {}
+class ColdBrewError extends Error { }
 
 
 module.exports = { createClient, addColdBrewMethods };

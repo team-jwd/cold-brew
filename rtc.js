@@ -1,5 +1,15 @@
-if (window.coldBrewData) throw new ColdBrewError(
-  'Cannot capture RTC events, window.coldBrewData property already exists');
+/* eslint no-undef: 0 */
+/* eslint no-unused-vars: 0 */
+/* eslint prefer-arrow-callback: 0 */
+/* eslint func-names: 0 */
+/* eslint no-use-before-define: 0 */
+/* eslint no-param-reassign: 0 */
+/* eslint no-shadow: 0 */
+
+if (window.coldBrewData) {
+  throw new ColdBrewError(
+    'Cannot capture RTC events, window.coldBrewData property already exists');
+}
 
 // Attach a coldBrewData object to the window object to keep a record of the
 // events that fire on the RTCPeerConnection object
@@ -29,7 +39,7 @@ const RTC_PEER_CONNECTION_EVENTS = [
   'removestream',
   'signalingstatechange',
   'track',
-]
+];
 
 
 /**
@@ -45,15 +55,17 @@ const RTC_PEER_CONNECTION_EVENTS = [
  */
 function coldBrewRTC(servers, options, coldBrewConfig) {
   coldBrewConfig = coldBrewConfig || {};
-  
+
   const production = coldBrewConfig.production || false;
   const listeners = coldBrewConfig.listeners || RTC_PEER_CONNECTION_EVENTS;
 
   const valid = listeners.every(listener =>
     RTC_PEER_CONNECTION_EVENTS.includes(listener));
 
-  if (!valid) throw new ColdBrewError(
-    'Invalid event names passed in to coldBrewRTC');
+  if (!valid) {
+    throw new ColdBrewError(
+      'Invalid event names passed in to coldBrewRTC');
+  }
 
   const peerConnection = new RTCPeerConnection(servers, options);
 
@@ -71,8 +83,10 @@ function coldBrewRTC(servers, options, coldBrewConfig) {
 
 function observeSignaling(socket) {
   return new Proxy(socket, {
-    get: function (target, key, receiver) {
-      let type, data, callback;
+    get(target, key, receiver) {
+      let type;
+      let data;
+      let callback;
 
       switch (key) {
         case 'emit':
@@ -97,12 +111,12 @@ function observeSignaling(socket) {
             window.coldBrewData.socketEvents.outgoing.push({
               type,
               data,
-              callback
+              callback,
             });
 
-            return target.emit(...args)
-          }
-        
+            return target.emit(...args);
+          };
+
         case 'on':
           // on always takes two arguments: the type of event and the callback
           return function (type, callback) {
@@ -110,21 +124,22 @@ function observeSignaling(socket) {
               window.coldBrewData.socketEvents.incoming.push({
                 type,
                 data,
-                callback
+                callback,
               });
 
-              callback(...data)
+              callback(...data);
             });
-          }
+          };
+
         default:
           return target[key];
       }
-    }
+    },
   });
 }
 
 
-class ColdBrewError extends Error {};
+class ColdBrewError extends Error {}
 
 if (typeof module !== 'undefined') {
   module.exports = {
