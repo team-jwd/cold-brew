@@ -13,6 +13,7 @@ in making ColdBrew better!
 ## Contents
 * [Getting Started: The absolute beginner's guide](#getting-started-1)
 * [Getting Started part 2: Testing WebRTC with ColdBrew](#getting-started-2)
+  * [Our In Depth Step by Step Tutorial on WebRTC and TDD](https://medium.com/@coldbrewtesting/getting-started-with-webrtc-and-test-driven-development-1cc6eb36ffd#.isonuyqhz)
 * [Tips & Best Practices](#tips-and-best-practices)
 * [API Documentation](#docs)
 
