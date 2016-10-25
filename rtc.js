@@ -67,6 +67,10 @@ function coldBrewRTC(servers, options, coldBrewConfig, dataChannelConfig) {
 
   const production = coldBrewConfig.production || false;
   const listeners = coldBrewConfig.listeners || RTC_PEER_CONNECTION_EVENTS;
+  const label = coldBrewConfig.label || null;
+
+  if (production) return new RTCPeerConnection(servers, options);
+
 
   const valid = listeners.every(listener =>
     RTC_PEER_CONNECTION_EVENTS.includes(listener));
@@ -78,7 +82,7 @@ function coldBrewRTC(servers, options, coldBrewConfig, dataChannelConfig) {
 
   // setup config for dataChannelConfig
   dataChannelConfig = dataChannelConfig || {};
-  
+
   const dataListeners = dataChannelConfig.listeners || RTC_DATA_CHANNEL_EVENTS;
 
   const dataValid = dataListeners.every(listener =>
@@ -91,43 +95,52 @@ function coldBrewRTC(servers, options, coldBrewConfig, dataChannelConfig) {
 
   const peerConnection = new RTCPeerConnection(servers, options);
 
-  if (!production) {
+  
+  if (label) {
+    window.coldBrewData.peerConnections[label] = [];
     listeners.forEach((listener) => {
       peerConnection.addEventListener(listener, (event) => {
-        window.coldBrewData.RTCEvents.push(event);
+        window.coldBrewData.peerConnections[label].push(event);
       });
-    });
-
-    const createDataChannel = peerConnection.createDataChannel.bind(peerConnection);
-
-    peerConnection.createDataChannel = function (...args) {
-      const newDataChannel = createDataChannel(...args);
-      dataListeners.forEach((listener) => {
-        newDataChannel.addEventListener(listener, (event) => {
-          window.coldBrewData.RTCDataChannelEvents.push(event)
-        });
-      });
-
-      return newDataChannel;
-    }
-
-    // this redefines how ondatachannel is assigned so that 
-    // we can add event listeners to the datachannel on the non-initiator side
-    Object.defineProperty(peerConnection, 'ondatachannel', {
-      set: function(func) {
-        peerConnection.addEventListener('datachannel', function(e) {
-          const datachannel = e.channel;
-          dataListeners.forEach((listener) => {
-            datachannel.addEventListener(listener, (event) => {
-              window.coldBrewData.RTCDataChannelEvents.push(event);
-            });
-          });
-
-          func(e);
-        });
-      }
     });
   }
+
+  listeners.forEach((listener) => {
+    peerConnection.addEventListener(listener, (event) => {
+      window.coldBrewData.RTCEvents.push(event);
+    });
+  });
+
+  const createDataChannel = peerConnection.createDataChannel.bind(peerConnection);
+
+  peerConnection.createDataChannel = function (...args) {
+    const newDataChannel = createDataChannel(...args);
+    dataListeners.forEach((listener) => {
+      newDataChannel.addEventListener(listener, (event) => {
+        window.coldBrewData.RTCDataChannelEvents.push(event)
+      });
+    });
+
+    return newDataChannel;
+  }
+
+  // this redefines how ondatachannel is assigned so that
+  // we can add event listeners to the datachannel on the non-initiator side
+  Object.defineProperty(peerConnection, 'ondatachannel', {
+    set(func) {
+      peerConnection.addEventListener('datachannel', function (e) {
+        const datachannel = e.channel;
+        dataListeners.forEach((listener) => {
+          datachannel.addEventListener(listener, (event) => {
+            window.coldBrewData.RTCDataChannelEvents.push(event);
+          });
+        });
+
+        func(e);
+      });
+    },
+  });
+
 
   return peerConnection;
 }

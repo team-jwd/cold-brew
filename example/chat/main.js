@@ -78,7 +78,8 @@ $(document).ready(() => {
 function createRTC(socket) {
   const peerConnection = coldBrewRTC(
     SERVERS,
-    { optional: [{ RtcDataChannels: true }] }
+    { optional: [{ RtcDataChannels: true }] },
+    { label: 'theonlypeerConnection' }
   );
 
   peerConnection.onicecandidate = (e) => {

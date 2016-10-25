@@ -170,6 +170,48 @@ describe('coldBrew', function () {
         .catch((err) => { if (err) done(); });
     });
 
+    it('shoud be able to detect events for a specific peerConnection', function (done) {
+      this.timeout(5000);
+
+      client1.get(ADDRESS);
+      client2.get(ADDRESS);
+
+      client1.waitUntilRTCEvents([
+        'signalingstatechange',
+        'addstream'
+      ], {
+          inOrder: true,
+          label: 'theonlypeerConnection'
+      }).then((occurred) => {
+        if (occurred) {
+          done();
+        }
+      });
+    });
+
+    it('should not be able to detect events for a peerConnection that doesn\'t exist', function (done) {
+      this.timeout(10000);
+
+      client1.get(ADDRESS);
+      client2.get(ADDRESS);
+
+      client1.waitUntilRTCEvents([
+        'signalingstatechange',
+        'addstream'
+      ], {
+          inOrder: true,
+          label: 'thisdoesnotexist'
+      }, 5000).then((occurred) => {
+        if (occurred) {
+          done(new Error('an event was detected when none should have been'));
+        }
+      }).catch((err) => {
+        if (err) {
+          done();
+        }
+      });
+    })
+
     afterEach(function (done) {
       client1.quit();
       client2.quit().then(() => done());
