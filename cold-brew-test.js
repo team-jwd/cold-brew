@@ -58,10 +58,16 @@ function addColdBrewMethods(client) {
    * e.g. client.wait(client.untilRTCEvents('signalingstatechange', 'iceconnectionstatechange'))
    */
   client.untilRTCEvents = function (events, options = {}) {
-    const { inOrder } = options;
+    const { inOrder, label } = options;
     if (inOrder && typeof inOrder !== 'boolean') {
       throw new TypeError(
         `Invalid option passed into untilRTCEvents: inOrder: ${inOrder}`
+      );
+    }
+
+    if (label && typeof label !== 'string') {
+      throw new TypeError(
+        `Invalid option passed into untilRTCEvents: label: ${label}`
       );
     }
 
@@ -71,27 +77,27 @@ function addColdBrewMethods(client) {
     // The plain function should return true if the events we are waiting
     // for exist on the window object, false otherwise.
     return function () {
-      return client.executeScript(function (events, inOrder) {
+      return client.executeScript(function (events, options) {
+        const { inOrder, label } = options;
         // Check to make sure coldBrewData has been initialized
         if (!(window.coldBrewData && window.coldBrewData.RTCEvents)) {
           return false;
         }
 
+        const loggedEvents = label ?
+          window.coldBrewData.peerConnections[label] :
+          window.coldBrewData.RTCEvents;
+
+        loggedEventNames = loggedEvents.map(event => event.type);
         // Handle the case where the user doesn't care if the events
         // happened in a certain order
+        
+        
         if (!inOrder) {
-          const RTCEvents = window.coldBrewData.RTCEvents
-            .map(event => event.type);
-
-          return events.every(eventType => RTCEvents.includes(eventType));
+          return events.every(eventName =>loggedEventNames.includes(eventName));
+        } else {
+          return sameElementsInSameOrder(events, loggedEventNames);
         }
-
-        // Handle the case where the user does care if the events
-        // happened in a certain order
-        const windowEvents = window.coldBrewData.RTCEvents
-          .map(event => event.type);
-
-        return sameElementsInSameOrder(events, windowEvents);
 
         function sameElementsInSameOrder(arr1, arr2) {
           let remainingArr2 = arr2;
@@ -107,7 +113,7 @@ function addColdBrewMethods(client) {
             return true;
           }, true);
         }
-      }, events, inOrder);
+      }, events, options);
     };
   };
 
@@ -178,7 +184,7 @@ function addColdBrewMethods(client) {
     return client.wait(client.untilSendSignaling(events, options), timeout);
   };
 
-  
+
   client.untilRecieveSignaling = function (events, options = {}) {
     const { inOrder } = options;
     if (inOrder && typeof inOrder !== 'boolean') {
@@ -218,7 +224,7 @@ function addColdBrewMethods(client) {
     };
   };
 
-  
+
   client.waitUntilReceiveSignaling = function (events, options, timeout) {
     return client.wait(client.untilRecieveSignaling(events, options), timeout);
   };
