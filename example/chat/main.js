@@ -187,7 +187,8 @@ function prepareToReceiveOffer(socket, peerConnection) {
     }
 
     dataChannel.onmessage = (message) => {
-      handleIncomingMessage(message.data);
+      data = JSON.parse(message.data);
+      handleIncomingMessage(data.message);
     };
   };
 
