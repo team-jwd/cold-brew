@@ -162,6 +162,43 @@ Note that the callback functions for `describe` and `it` should
 *not* be ES2015 arrow functions (see the
 [Mocha docs](https://mochajs.org/#arrow-functions) for more details)
 
+### Development vs. Production
+In order to be able to observe the events that are firing on the signaling
+sockets, RTCPeerConnections, and RTCDataChannels from within the test
+script, ColdBrew is performing a lot of event handling in the background,
+which can impact performance. When going into production, all of ColdBrew's
+background processes can be disabled by passing the `production: true` flag in
+to the [coldBrewRTC](#cold-brew-rtc) function when the RTCPeerConnection object is created:
+```javascript
+// For development, allows WebRTC events to be observed from within a test script
+const peerConnection = coldBrewRTC(
+  servers,
+  options
+);
+
+
+// For production, disables all extraneous event listening
+// to eliminate performance overhead
+const peerConnection = coldBrewRTC(
+  servers,
+  options,
+  { production: true }
+)
+```
+
+The same thing can be done with the [observeSignaling](#observe-signaling)
+function:
+```javascript
+// For development, allows signaling events to be observed from
+// within a test script
+const socket = observeSignaling(io());
+
+
+// For production, disables all extraneous event listening to eliminate
+// performance overhead
+const socket = observeSignaling(io(), { production: true })
+```
+
 ---
 ## <a name="docs"></a> API Documentation
 ### Overview
@@ -200,7 +237,7 @@ import { coldBrewRTC } from 'cold-brew/rtc';
 #### API
 The client-side module exposes the following functions and objects:
 * [coldBrewRTC(configuration, options, coldBrewConfig)](#cold-brew-rtc)
-* [observeSignaling(socket)](#observe-signaling)
+* [observeSignaling(socket, options)](#observe-signaling)
 * [RTC\_PEER\_CONNECTION\_EVENTS](#rtc-peer-connection-events)
 * [RTC\_DATA\_CHANNEL\_EVENTS](#rtc-data-channel-events)
 
@@ -215,7 +252,7 @@ function rather than the standard RTCPeerConnection constructor
 
 Parameters:
 * *configuration*: An object specifying the configuration options for the RTCPeerConnection object. Identical to the first parameter of the [RTCPeerConnection constructor](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/RTCPeerConnection).
-* _*options*_: An object specifying other optional properties of the RTCPeerConnection object.
+* *options*: An object specifying other optional properties of the RTCPeerConnection object.
 * *coldBrewConfig*: An object containing configuration options for coldBrew. Defaults to an empty object if not provided. The object may contain the following properties:
   * *production*: Boolean value that, if true, disables all ColdBrew functionality to eliminate performance overhead. Defaults to false.
   * *listeners*: Array containing the RTCPeerConnection events that you want to be able to observe from the test script. Defaults to [RTC\_PEER\_CONNECTION_EVENTS](#rtc-peer-connection-events).
@@ -249,7 +286,7 @@ const peerConnection = coldBrewRTC(
 ```
 
 <a name="observe-signaling"></a>
-**observeSignaling(socket)**
+**observeSignaling(socket, options)**
 
 Modifies the behavior of a [Socket](http://socket.io/docs/client-api/#io(url:string,-opts:object):socket)
 so that the events it emits and receives can be visible to an external
@@ -258,6 +295,12 @@ test script.
 Parameters:
 * *socket*: A [Socket](http://socket.io/docs/client-api/#io(url:string,-opts:object):socket)
   object, as specified by the socket.io client API
+* *options*: An object of configuration options for the signaling socket.
+  The following properties can be provided:
+  * *production*: If `true`, disables all background event listeners on the socket,
+    eliminating performance overhead. Defaults to `false`.
+    Note: If `production: true` is provided, the test script will not be able to
+    observe any signaling events sent through the socket.
 
 Returns: The Socket object that was passed in, modified to allow
 the events it emits and receives to be observed by an external test script.
