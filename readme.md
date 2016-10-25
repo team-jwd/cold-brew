@@ -13,6 +13,7 @@ in making ColdBrew better!
 ## Contents
 * [Getting Started: The absolute beginner's guide](#getting-started-1)
 * [Getting Started part 2: Testing WebRTC with ColdBrew](#getting-started-2)
+  * [Our In Depth Step by Step Tutorial on WebRTC and TDD](https://medium.com/@coldbrewtesting/getting-started-with-webrtc-and-test-driven-development-1cc6eb36ffd#.isonuyqhz)
 * [Tips & Best Practices](#tips-and-best-practices)
 * [API Documentation](#docs)
 
@@ -130,7 +131,7 @@ describe('ColdBrew client', function () {
 
 ---
 ## <a name="getting-started-2"></a> Getting Started part 2: Testing WebRTC
-This section is a work in progress; check back soon!
+[Check out our full tutorial on test driven development with WebRTC](https://medium.com/@coldbrewtesting/getting-started-with-webrtc-and-test-driven-development-1cc6eb36ffd#.dxqf15jd3)
 
 ---
 ## <a name="tips-and-best-practices"></a> Tips & best practices
