@@ -62,87 +62,98 @@ const RTC_DATA_CHANNEL_EVENTS = [
  * @return {type}                description
  */
 function coldBrewRTC(servers, options, coldBrewConfig, dataChannelConfig) {
+  if (coldBrewConfig && coldBrewConfig.production) {
+    return new RTCPeerConnection(servers, options);
+  }
+
   // setup config for RTCPeerConnection
   coldBrewConfig = coldBrewConfig || {};
 
-  const production = coldBrewConfig.production || false;
   const listeners = coldBrewConfig.listeners || RTC_PEER_CONNECTION_EVENTS;
   const label = coldBrewConfig.label || null;
-
-  if (production) return new RTCPeerConnection(servers, options);
-
-
-  const valid = listeners.every(listener =>
-    RTC_PEER_CONNECTION_EVENTS.includes(listener));
-
-  if (!valid) {
-    throw new ColdBrewError(
-      'Invalid event names passed in to coldBrewRTC');
-  }
+  validateListeners(listeners);
 
   // setup config for dataChannelConfig
   dataChannelConfig = dataChannelConfig || {};
 
   const dataListeners = dataChannelConfig.listeners || RTC_DATA_CHANNEL_EVENTS;
+  validateDataListeners(dataListeners);
 
-  const dataValid = dataListeners.every(listener =>
-    RTC_DATA_CHANNEL_EVENTS.includes(listener));
-
-  if (!dataValid) {
-    throw new ColdBrewError(
-      'Invalid data channel event names passed in to coldBrewRTC');
-  } 
-
+  // Create peer connection
   const peerConnection = new RTCPeerConnection(servers, options);
-
-  
-  if (label) {
-    window.coldBrewData.peerConnections[label] = [];
-    listeners.forEach((listener) => {
-      peerConnection.addEventListener(listener, (event) => {
-        window.coldBrewData.peerConnections[label].push(event);
-      });
-    });
-  }
-
-  listeners.forEach((listener) => {
-    peerConnection.addEventListener(listener, (event) => {
-      window.coldBrewData.RTCEvents.push(event);
-    });
-  });
-
-  const createDataChannel = peerConnection.createDataChannel.bind(peerConnection);
-
-  peerConnection.createDataChannel = function (...args) {
-    const newDataChannel = createDataChannel(...args);
-    dataListeners.forEach((listener) => {
-      newDataChannel.addEventListener(listener, (event) => {
-        window.coldBrewData.RTCDataChannelEvents.push(event)
-      });
-    });
-
-    return newDataChannel;
-  }
-
-  // this redefines how ondatachannel is assigned so that
-  // we can add event listeners to the datachannel on the non-initiator side
-  Object.defineProperty(peerConnection, 'ondatachannel', {
-    set(func) {
-      peerConnection.addEventListener('datachannel', function (e) {
-        const datachannel = e.channel;
-        dataListeners.forEach((listener) => {
-          datachannel.addEventListener(listener, (event) => {
-            window.coldBrewData.RTCDataChannelEvents.push(event);
-          });
-        });
-
-        func(e);
-      });
-    },
-  });
-
+  addEventLogListeners(peerConnection, listeners, label);
+  addDataListenersOnChannelCreation(peerConnection, dataListeners);
+  addDataListenersOnDataChannelEvent(peerConnection, dataListeners);
 
   return peerConnection;
+
+
+  function validateListeners(listeners) {
+    const valid = listeners.every(listener =>
+      RTC_PEER_CONNECTION_EVENTS.includes(listener));
+
+    if (!valid) {
+      throw new ColdBrewError(
+        'Invalid event names passed in to coldBrewRTC');
+    }
+  }
+
+  function validateDataListeners(dataListeners) {
+    const valid = dataListeners.every(listener =>
+      RTC_DATA_CHANNEL_EVENTS.includes(listener));
+
+    if (!valid) {
+      throw new ColdBrewError(
+        'Invalid data channel event names passed in to coldBrewRTC');
+    }
+  }
+
+  function addEventLogListeners(peerConnection, listeners, label = null) {
+    if (label) {
+      window.coldBrewData.peerConnections[label] = [];
+    }
+
+    listeners.forEach((listener) => {
+      peerConnection.addEventListener(listener, (event) => {
+        window.coldBrewData.RTCEvents.push(event);
+        if (label) {
+          window.coldBrewData.peerConnections[label].push(event);
+        }
+      });
+    });
+  }
+
+  function addDataListenersOnChannelCreation(peerConnection, dataListeners) {
+    const createDataChannel = peerConnection.createDataChannel.bind(peerConnection);
+
+    peerConnection.createDataChannel = function (...args) {
+      const newDataChannel = createDataChannel(...args);
+      dataListeners.forEach((listener) => {
+        newDataChannel.addEventListener(listener, (event) => {
+          window.coldBrewData.RTCDataChannelEvents.push(event)
+        });
+      });
+
+      return newDataChannel;
+    }
+  }
+
+  function addDataListenersOnDataChannelEvent(peerConnection, dataListeners) {
+    Object.defineProperty(peerConnection, 'ondatachannel', {
+      set(func) {
+        peerConnection.addEventListener('datachannel', function (e) {
+          const datachannel = e.channel;
+          dataListeners.forEach((listener) => {
+            datachannel.addEventListener(listener, (event) => {
+              window.coldBrewData.RTCDataChannelEvents.push(event);
+            });
+          });
+
+          func(e);
+        });
+      },
+    });
+  }
 }
 
 
@@ -151,58 +162,64 @@ function observeSignaling(socket, options = {}) {
 
   return new Proxy(socket, {
     get(target, key, receiver) {
-      let type;
-      let data;
-      let callback;
-
       switch (key) {
-        case 'emit':
-          // emit can be called with 1 to 3 arguments:
-          // type
-          // type, data
-          // type, callback
-          // type, data, callback
-          // Therefore, we need to parse the arguments
-          return function (...args) {
-            const type = args[0];
+      case 'emit':
+        return emitAndLog(target);
 
-            if (args[1]) {
-              if (typeof args[1] === 'function') callback = args[1];
-              else data = args[1];
-            }
+      case 'on':
+        return logOnReceipt(target);
 
-            if (args[2]) {
-              if (typeof args[2] === 'function') callback = args[2];
-            }
-
-            window.coldBrewData.socketEvents.outgoing.push({
-              type,
-              data,
-              callback,
-            });
-
-            return target.emit(...args);
-          };
-
-        case 'on':
-          // on always takes two arguments: the type of event and the callback
-          return function (type, callback) {
-            target.on(type, (...data) => {
-              window.coldBrewData.socketEvents.incoming.push({
-                type,
-                data,
-                callback,
-              });
-
-              callback(...data);
-            });
-          };
-
-        default:
-          return target[key];
+      default:
+        return target[key];
       }
     },
   });
+
+  function emitAndLog(target) {
+    return function (...args) {
+      // emit can be called with 1 to 3 arguments:
+      // type
+      // type, data
+      // type, callback
+      // type, data, callback
+      // Therefore, we need to parse the arguments
+      const type = args[0];
+
+      let data;
+      let callback;
+
+      if (args[1]) {
+        if (typeof args[1] === 'function') callback = args[1];
+        else data = args[1];
+      }
+
+      if (args[2]) {
+        if (typeof args[2] === 'function') callback = args[2];
+      }
+
+      window.coldBrewData.socketEvents.outgoing.push({
+        type,
+        data,
+        callback,
+      });
+
+      return target.emit(...args);
+    }
+  }
+
+  function logOnReceipt(target) {
+    return function (type, callback) {
+      target.on(type, (...data) => {
+        window.coldBrewData.socketEvents.incoming.push({
+          type,
+          data,
+          callback,
+        });
+
+        callback(...data);
+      });
+    }
+  }
 }
 
 
@@ -213,6 +230,7 @@ if (typeof module !== 'undefined') {
     coldBrewRTC,
     observeSignaling,
     RTC_PEER_CONNECTION_EVENTS,
+    RTC_DATA_CHANNEL_EVENTS
   };
 }
 
