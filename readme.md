@@ -130,7 +130,7 @@ describe('ColdBrew client', function () {
 
 ---
 ## <a name="getting-started-2"></a> Getting Started part 2: Testing WebRTC
-This section is a work in progress; check back soon!
+[Check out our full tutorial on test driven development with WebRTC](https://medium.com/@coldbrewtesting/getting-started-with-webrtc-and-test-driven-development-1cc6eb36ffd#.dxqf15jd3)
 
 ---
 ## <a name="tips-and-best-practices"></a> Tips & best practices
