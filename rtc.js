@@ -110,6 +110,23 @@ function coldBrewRTC(servers, options, coldBrewConfig, dataChannelConfig) {
 
       return newDataChannel;
     }
+
+    // this redefines how ondatachannel is assigned so that 
+    // we can add event listeners to the datachannel on the non-initiator side
+    Object.defineProperty(peerConnection, 'ondatachannel', {
+      set: function(func) {
+        peerConnection.addEventListener('datachannel', function(e) {
+          const datachannel = e.channel;
+          dataListeners.forEach((listener) => {
+            datachannel.addEventListener(listener, (event) => {
+              window.coldBrewData.RTCDataChannelEvents.push(event);
+            });
+          });
+
+          func(e);
+        });
+      }
+    });
   }
 
   return peerConnection;
