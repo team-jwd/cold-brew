@@ -3,6 +3,12 @@
 /* eslint prefer-arrow-callback: 0 */
 /* eslint func-names: 0 */
 
+
+/*
+ * Testing all testing functions we have written on an
+ * example application that we wrote.
+ * *** Need to write tests for data channel events ***
+ */
 const expect = require('chai').expect;
 const coldBrew = require('../cold-brew-test');
 
@@ -24,6 +30,7 @@ describe('coldBrew', function () {
       client = coldBrew.createClient();
     });
 
+
     it('should be able to locate an element by its attribute', function (done) {
       this.timeout(10000);
 
@@ -32,6 +39,8 @@ describe('coldBrew', function () {
         placeholder: 'Type a message...',
       }).then((located) => { if (located) done(); });
     });
+
+
 
     it('should not be able to locate an element that doesn\'t exist', function (done) {
       this.timeout(10000);
@@ -57,6 +66,8 @@ describe('coldBrew', function () {
       this.timeout(5000);
       client = coldBrew.createClient();
     });
+
+
 
     it('should be able to perform multiple navigation events', function (done) {
       this.timeout(10000);
@@ -291,3 +302,4 @@ describe('coldBrew', function () {
     });
   });
 });
+
