@@ -202,9 +202,10 @@ The client-side module exposes the following functions and objects:
 * [coldBrewRTC(configuration, options, coldBrewConfig)](#cold-brew-rtc)
 * [observeSignaling(socket)](#observe-signaling)
 * [RTC\_PEER\_CONNECTION\_EVENTS](#rtc-peer-connection-events)
+* [RTC\_DATA\_CHANNEL\_EVENTS](#rtc-data-channel-events)
 
 <a name="cold-brew-rtc"></a>
-**coldBrewRTC(configuration, options, coldBrewConfig)**
+**coldBrewRTC(configuration, options, coldBrewConfig, dataChannelConfig)**
 
 A factory function that creates and returns an RTCPeerConnection object. In
 order to be able to observe the RTCPeerConnection's events from
@@ -218,6 +219,16 @@ Parameters:
 * *coldBrewConfig*: An object containing configuration options for coldBrew. Defaults to an empty object if not provided. The object may contain the following properties:
   * *production*: Boolean value that, if true, disables all ColdBrew functionality to eliminate performance overhead. Defaults to false.
   * *listeners*: Array containing the RTCPeerConnection events that you want to be able to observe from the test script. Defaults to [RTC\_PEER\_CONNECTION_EVENTS](#rtc-peer-connection-events).
+  * *label*: String label for this RTCPeerConnection object. If provided, the events
+    that fire on this particular RTCPeerConnection can be observed separately
+    from all others in a test script. Defaults to `null`.
+* *dataChannelConfig*: An object containing configuration options for any
+  RTCDataChannel objects created by the `createDataChannel` method of the
+  RTCPeerConnection returned from `coldBrewRTC`. The object may contain the following
+  properties:
+  * *listeners*: Array containing the RTCDataChannel events that you want to be
+    able to observe from the test script. Defaults to
+    [RTC\_DATA\_CHANNEL\_EVENTS](#rtc-data-channel-events)
 
 Returns: An `RTCPeerConnection` object
 
@@ -264,6 +275,13 @@ const socket = observeSignaling(io());
 **RTC\_PEER\_CONNECTION\_EVENTS**
 
 Array containing the names of all of the events that fire on the [RTCPeerConnection object](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection).
+
+<a name="rtc-data-channel-events"></a>
+**RTC\_DATA\_CHANNEL\_EVENTS**
+
+Array containing the names of all of the events that fire on the
+[RTCDataChannel](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel)
+object.
 
 ### <a name="testing-module"></a> The Testing Module
 #### Getting started
@@ -340,9 +358,17 @@ Parameters:
 * *events*: An array of names of events that fire on the RTCPeerConnection
   object in the browser
 * *options*: An object of configuration options. The following options are supported:
-  * inOrder: If true, the returned promise will only resolve if
+  * *inOrder*: If true, the returned promise will only resolve if
              the events occurred in the same order as the passed-in array.
              Defaults to `false` if not provided.
+  * *label*: String label for an RTCPeerConnection. If provided, the returned
+             promise will only resolve if the events given in the
+             *events* array fire on the RTCPeerConnection that was given
+             the specified label when it was created with the
+             [coldBrewRTC](#cold-brew-rtc) factory function. If not,
+             the promise will resolve if the provided events fire on
+             _any_ RTCPeerConnection object that exists in the browser.
+             
 
 Returns: A promise that will resolve with a truthy value when the specified
 events have fired on the RTCPeerConnection object in the browser. Note: This
