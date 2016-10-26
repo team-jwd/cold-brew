@@ -132,6 +132,7 @@ describe('coldBrew', function () {
     let client2;
 
     beforeEach(function () {
+      resetNumClients(0);
       client1 = coldBrew.createClient();
       client2 = coldBrew.createClient();
     });
@@ -181,7 +182,7 @@ describe('coldBrew', function () {
         .catch((err) => { if (err) done(); });
     });
 
-    it('shoud be able to detect events for a specific peerConnection', function (done) {
+    it('should be able to detect events for a specific peerConnection', function (done) {
       this.timeout(5000);
 
       client1.get(ADDRESS);
@@ -231,6 +232,7 @@ describe('coldBrew', function () {
 
   describe('waitUntilSendSignaling', function () {
     beforeEach(function () {
+      resetNumClients(0);
       client1 = coldBrew.createClient();
       client2 = coldBrew.createClient();
     });
@@ -287,6 +289,7 @@ describe('coldBrew', function () {
 
   describe('Wait until receive signaling', function () {
     beforeEach(function () {
+      resetNumClients(0);
       client1 = coldBrew.createClient();
       client2 = coldBrew.createClient();
     });
@@ -337,6 +340,32 @@ describe('coldBrew', function () {
       }).then((occurred) => { if (occurred) done(); });
     });
 
+
+    afterEach(function (done) {
+      client1.quit();
+      client2.quit().then(() => done());
+    });
+  });
+
+  describe('Data Channel Events', function() {
+    beforeEach(function () {
+      resetNumClients(0);
+      client1 = coldBrew.createClient();
+      client2 = coldBrew.createClient();
+    });
+
+    it('should detect that data channel events have occured', function(done) {
+      this.timeout(5000);
+      
+      client1.get(ADDRESS);
+      client2.get(ADDRESS);
+      client2.do([['sendKeys', '#text-chat form input', { type: 'text' }, 'Hello World'], ['click', '#sendMessage', {}]]);
+
+      client1.waitUntilDataChannelEvents([
+        'open',
+        'message',
+      ], {}).then((occurred) => { if (occurred) done() });
+    });
 
     afterEach(function (done) {
       client1.quit();
