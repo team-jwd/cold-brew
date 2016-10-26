@@ -229,6 +229,31 @@ function addColdBrewMethods(client) {
     return client.wait(client.untilRecieveSignaling(events, options), timeout);
   };
 
+  client.untilDataChannelEvents = function(events, options = {}) {
+    const { inOrder } = options;
+    if (inOrder && typeof inOrder !== 'boolean') {
+      throw new TypeError(
+        `Invalid option passed into untilDataChannelEvents: inOrder: ${inOrder}`
+      );
+    }
+    return function() {
+      return client.executeScript(function(events, inOrder) {
+        console.log(window.coldBrewData);
+        if (!(window.coldBrewData && window.coldBrewData.RTCDataChannelEvents)) {
+          return false;
+        }
+        if (!inOrder) {
+          const RTCDataChannelEvents = window.coldBrewData.RTCDataChannelEvents.map(event => event.type);
+          return events.every(eventName => RTCDataChannelEvents.includes(eventName));
+        }
+      }, events, inOrder);
+    }
+  }
+
+  client.waitUntilDataChannelEvents = function(events, options, timeout) {
+    return client.wait(client.untilDataChannelEvents(events, options), timeout);
+  };
+
   /**
    * findElementByAttributes - allows the webdriver to locate elements
    * by a css selector and then filter those elements by other attributes
