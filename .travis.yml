@@ -1,3 +1,8 @@
 language: node_js
 node_js:
-- 6.40
+- 6.4
+addons:
+  sauce_connect:
+    username: coldbrewtesting
+    jwt:
+      secure: EV8RTkdMZjNXwpDq+WHnwoFcdvrEt6GbP4UV631puACr9lcbNBTkQf32ckmZ311VefcuigQI732CitwBGZXY4lAKedozGWgkOFvmIZCfCeE+FdREjxKfm8CnqOim8GwtuQgmk4X9UfMhBNzpH2+/0yTQyPJs3ThUA1PYdz7Lb9sipvpN9kENOYwTKHlQ6iBaaALqySsPEhN8G9f+nrqNH+b53UinzomDK2kT9a2OYumPHCrOAXE/ZOIWaQbT2L6rXCRSwC4lVIBBGI/rbeMB4wPybp9TaW52upEyR9/fa6H7wKYlzjBKz9pspHaJG12r9FoNCfflcEWsemCTJjPCMSyZwk+3f+A5dtEtaREsbRGypjQjCxr8Z9mbfajqFP39y7yP4uG5J2/kYGwvgJNrHJb5tb3SFhkd90HHY+imJEnaTBIWJoysPDv0hUfsdu1khLAdnd4Yv4+eMTpN8ytLkK2/6cmVz/N+u3R/AiuoxpQK/aey1tlrxhpMiMGAuSDESfBn6AynLPjjBQCci9Vng0aFXnIAaav/ZVIfGzJuZoMTG7M6rhpCjfb3jOYc8tqlzQ8axnaBBiMeg/x+mLcnNJSJlU0LwAiZVL5E7pK5GhXm3gj1XWhAb+Zf8QfIFxrXdtq2BRm2tB3wvk+140YXCrN71HLBZhYVurxjcAwI52g=
