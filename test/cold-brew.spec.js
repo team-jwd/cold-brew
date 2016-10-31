@@ -16,9 +16,12 @@ const jwtDecode = require('jwt-decode');
 const { ColdBrewError } = coldBrew;
 
 const { resetNumClients } = require('./../example/chat/server.js');
-console.log(process.env.NODE_ENV);
 
-const ADDRESS = 'http://localhost:4444';
+if (process.env.SAUCE_USERNAME) {
+  const ADDRESS = 'ondemand.saucelabs.com:80';
+} else {
+  const ADDRESS = 'http://localhost:4444';
+}
 describe('coldBrew', function () {
   beforeEach(function () {
     resetNumClients(0);
