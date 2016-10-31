@@ -363,7 +363,6 @@ describe('coldBrew', function () {
 
       client1.waitUntilDataChannelEvents([
         'open',
-        'message',
       ], {}).then((occurred) => { if (occurred) done() });
     });
 
