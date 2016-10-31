@@ -11,10 +11,12 @@
  */
 const expect = require('chai').expect;
 const coldBrew = require('../cold-brew-test');
+const jwtDecode = require('jwt-decode');
 
 const { ColdBrewError } = coldBrew;
 
 const { resetNumClients } = require('./../example/chat/server.js');
+console.log(process.env);
 
 const ADDRESS = 'http://localhost:4444';
 describe('coldBrew', function () {
@@ -33,7 +35,6 @@ describe('coldBrew', function () {
 
     it('should be able to locate an element by its attribute', function (done) {
       this.timeout(100000);
-
       client.get(ADDRESS);
       client.findElementByAttributes('input', {
         placeholder: 'Type a message...',

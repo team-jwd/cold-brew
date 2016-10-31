@@ -22,10 +22,11 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
-    "jsdoc": "^3.4.2",
-    "mocha": "^3.1.2",
     "express": "^4.14.0",
     "jquery": "^3.1.1",
+    "jsdoc": "^3.4.2",
+    "jwt-decode": "^2.1.0",
+    "mocha": "^3.1.2",
     "selenium-webdriver": "^3.0.0-beta-3",
     "socket.io": "^1.5.0",
     "socket.io-client": "^1.5.0",
