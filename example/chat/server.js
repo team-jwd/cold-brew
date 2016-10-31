@@ -36,8 +36,8 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(`${__dirname}/index.html`));
 });
 
-server.listen(3000, () => {
-  console.log('listnin on 3k');
+server.listen(4444, () => {
+  console.log('listnin on 4444');
 });
 
 module.exports = {
