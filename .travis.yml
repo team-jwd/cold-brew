@@ -7,6 +7,8 @@ env:
   global:
   - SAUCE_USERNAME=coldbrewtesting
   - secure: meTaZX6XVE7rFQxQkLMTdQGxFFGYBBfWGS/TmDt2ARhWbE4EK3ncCStzZPLhDy7yRvvdoA8Xh3ec7lZY3Duq/gufZxxFjx8bc5i2yq4BWMdxpHW3qVXhhWRVUkf7apzJauYWzYI/puY9TggdrtYBzITJbj2PwvfpzK28xK0JmWP7oJCjl+Zh209XZf0iuSZDOCPQcjUN9TcGk0u0arn3IMV0sfblXCyunu8SAN99o2q9Rx11xmMOubAMeyKTbGMR4tiSgHyflfySkzGs7yXl85/D1fO22nyZ0DkZc/EV723XsRi1doOYeKNAxPhWuOUwYcVA6BPHYWYaEJpB46MseDY7Nh7vnD2FD8SkAvjKegxdNQeqh4MWDVOXqleDYRMPHW6DdRYwvD9KEGVSBQ1W/sFGM7/9kJLX4alYhE/9pPRZPjW7ycWEq8ZzyXO8NF5fUFoT6pmwHg6mp6tkGoETjaeDTdJcqzJ8EAFLkzxHfAoAT+z+2NBbvCUGu+H7QEY+26kj3YVMwEX+w8hrUyORO9cgN9SwezzK4HZ7THtgVAObTHUNwQWvfceyvqtloSWbqqlQubTaXAIVwETpf/n2WNxNuSU0mZWAbxjhE06wdsthll4IiyBIld7hlIeerefNKk4P/jXzPdA2W9OTcr/APYheJLn3RsWJYlAaIE4M6eE=
-script: 
+before_script: 
   - if [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then bash ./travis/run_on_pull_requests; fi
   - if [ "${TRAVIS_PULL_REQUEST}" = "false" ];  then bash ./travis/run_on_non_pull_requests; fi
+script:
+  - npm run test
