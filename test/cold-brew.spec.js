@@ -16,7 +16,7 @@ const { ColdBrewError } = coldBrew;
 
 const { resetNumClients } = require('./../example/chat/server.js');
 
-const ADDRESS = 'http://localhost:3000';
+const ADDRESS = 'http://localhost:4444';
 describe('coldBrew', function () {
   beforeEach(function () {
     resetNumClients(0);
