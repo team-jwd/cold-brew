@@ -13,6 +13,7 @@ in making ColdBrew better!
 ## Contents
 * [Getting Started: The absolute beginner's guide](#getting-started-1)
 * [Getting Started part 2: Testing WebRTC with ColdBrew](#getting-started-2)
+  * [Quick Start](#quick-start)
   * [Our In Depth Step by Step Tutorial on WebRTC and TDD](https://medium.com/@coldbrewtesting/getting-started-with-webrtc-and-test-driven-development-1cc6eb36ffd#.isonuyqhz)
 * [Tips & Best Practices](#tips-and-best-practices)
 * [API Documentation](#docs)
@@ -131,6 +132,99 @@ describe('ColdBrew client', function () {
 
 ---
 ## <a name="getting-started-2"></a> Getting Started part 2: Testing WebRTC
+
+### <a name="quick-start"></a> Quick start
+In order to test WebRTC applications using Cold Brew, there are
+four essential steps that must be performed after you have
+installed it:
+#### Step 1
+Import `cold-brew/rtc` into your client-side code. This can be done either
+as a script tag in your HTML:
+```html
+<script type="text/javascript" src="./node_modules/cold-brew/rtc.js"></script>
+```
+or, if you are bundling your client-side code using a tool like
+[webpack](https://webpack.github.io/),
+by requiring the `cold-brew/rtc` module into the appropriate file
+in one of the following ways:
+```javascript
+// CommonJS syntax
+const { coldBrewRTC, observeSignaling } = require('cold-brew/rtc');
+```
+```javascript
+// ES2015 Import syntax--use only if you are transpiling
+import { coldBrewRTC, observeSignaling } from 'cold-brew/rtc';
+```
+#### Step 2
+In your client-side code, replace any calls to the `RTCPeerConnection`
+constructor with calls to the `coldBrewRTC` factory function:
+```javascript
+// Instead of this:
+const peerConnection = new RTCPeerConnection(servers, options)
+
+// ...do this:
+const peerConnection = coldBrewRTC(servers, options)
+```
+Notice that the `coldBrewRTC` factory function takes the exact same
+arguments as the `RTCPeerConnection` constructor (the `coldBrewRTC`
+factory function optionally takes additional arguments for configuration,
+see the [documentation](#cold-brew-rtc) for details).
+
+#### Step 3
+Cold Brew currently supports the usage of [Socket.io](http://socket.io/) as a signaling
+channel.
+
+In your client-side code, call the `observeSignaling` Mixin function
+on the socket instance produced by the `io` function:
+```javascript
+// Instead of this:
+const socket = io()
+
+// ...do this:
+const socket = observeSignaling(io())
+```
+
+#### Step 4
+Import `cold-brew` into your test script:
+```javascript
+const coldBrew = require('cold-brew')
+
+// Require your server file so that your server will run in your tests
+const app = require('./server/index.js') // ...or whatever your server file is named
+
+const ADDRESS = 'http://localhost:3000';
+
+// Example tests...replace these with tests appropriate to your situation:
+describe('app', function (done) {
+  let client1;
+  let client2;
+
+  before(function () {
+    client1 = coldBrew.createClient();
+    client2 = coldBrew.createClient();
+  })
+
+  it('client 1 should send an offer to client 2', function (done) {
+    client1.get(ADDRESS);
+    client2.get(ADDRESS);
+
+    client1.waitUntilSendSignaling(['offer'])
+    client2.waitUntilReceiveSignaling(['offer'])
+      .then(() => done())
+  })
+
+  after(function (done) {
+    client1.quit()
+    client2.quit().then(() => done())
+  })
+})
+```
+Notice that, when using Mocha as a test runner, each test case
+must end with an explicit call to `.then(() => done())`. For
+a detailed discussion of why this is necessary, see
+[Tips and Best Practices: Wrapping up test cases](#wrapping-up-test-cases).
+
+### Detailed guide
 [Check out our full tutorial on test driven development with WebRTC](https://medium.com/@coldbrewtesting/getting-started-with-webrtc-and-test-driven-development-1cc6eb36ffd#.dxqf15jd3)
 
 ---
@@ -197,6 +291,124 @@ const socket = observeSignaling(io());
 // For production, disables all extraneous event listening to eliminate
 // performance overhead
 const socket = observeSignaling(io(), { production: true })
+```
+
+### <a name="wrapping-up-test-cases"></a> Wrapping up test cases
+Cold Brew uses [Selenium Webdriver](http://seleniumhq.github.io/selenium/docs/api/javascript/module/selenium-webdriver/lib/webdriver.html)
+behind the scenes in order to
+create and automate browser instances. Selenium Webdriver uses
+a Promise-based API, but the Selenium API differs in one key
+way from most other APIs: When a Selenium function is invoked,
+instead of performing the action at that moment, Selenium *schedules*
+that task within a queue that it maintains behind the scenes. After
+scheduling all of the tasks, Selenium goes through the queue and
+executes the tasks one after the other, moving on to the next task
+when the previous one is complete.
+
+What this means is that Cold Brew tests can usually be written as if
+they are synchronous, even though they are actually asynchronous:
+```javascript
+const coldBrew = require('cold-brew')
+
+const app = require('./server/index.js')
+
+const ADDRESS = 'http://localhost:3000';
+
+describe('app', function (done) {
+  let client1;
+  let client2;
+
+  before(function () {
+    client1 = coldBrew.createClient();
+    client2 = coldBrew.createClient();
+  })
+
+  it('client 1 should send an offer to client 2', function (done) {
+    client1.get(ADDRESS);
+    client2.get(ADDRESS);
+
+    client1.waitUntilSendSignaling(['offer'])
+    client2.waitUntilReceiveSignaling(['offer'])
+      .then(() => done())
+  })
+
+  after(function (done) {
+    client1.quit()
+    client2.quit().then(() => done())
+  })
+})
+```
+Caution: It is tempting to put the `done()` invocation
+directly after the last Cold Brew task, which is *incorrect*, as it
+will cause the `done` function to be invoked after all of the
+tasks have been *scheduled*, not after they have been *completed*:
+```javascript
+const coldBrew = require('cold-brew')
+
+const app = require('./server/index.js')
+
+const ADDRESS = 'http://localhost:3000';
+
+describe('app', function (done) {
+  let client1;
+  let client2;
+
+  before(function () {
+    client1 = coldBrew.createClient();
+    client2 = coldBrew.createClient();
+  })
+
+  it('client 1 should send an offer to client 2', function (done) {
+    client1.get(ADDRESS);
+    client2.get(ADDRESS);
+
+    client1.waitUntilSendSignaling(['offer'])
+    client2.waitUntilReceiveSignaling(['offer'])
+    done() // WRONG WRONG WRONG WRONG WRONG
+  })
+
+  after(function (done) {
+    client1.quit()
+    client2.quit()
+    done() // WRONG WRONG WRONG WRONG WRONG
+  })
+})
+```
+This is an especially insidious error, because it will often cause
+your tests to pass even if they should fail. To correct this,
+we need to use the `then` method to explicitly schedule the
+invocation of the `done` function to happen after the final
+task has been *completed* in each test case:
+```javascript
+const coldBrew = require('cold-brew')
+
+const app = require('./server/index.js')
+
+const ADDRESS = 'http://localhost:3000';
+
+describe('app', function (done) {
+  let client1;
+  let client2;
+
+  before(function () {
+    client1 = coldBrew.createClient();
+    client2 = coldBrew.createClient();
+  })
+
+  it('client 1 should send an offer to client 2', function (done) {
+    client1.get(ADDRESS);
+    client2.get(ADDRESS);
+
+    client1.waitUntilSendSignaling(['offer'])
+    client2.waitUntilReceiveSignaling(['offer'])
+      .then(() => done()) // CORRECT
+  })
+
+  after(function (done) {
+    client1.quit()
+    client2.quit().then(() => done()) // CORRECT
+  })
+})
 ```
 
 ---
