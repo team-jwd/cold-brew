@@ -19,7 +19,35 @@ const { By } = selenium;
  * methods attached
  */
 function createClient() {
-  const client = new selenium.Builder()
+  let client;
+  // const client = new selenium.Builder()
+  //   .usingServer()
+  //   .withCapabilities({
+  //     browserName: 'chrome',
+  //     chromeOptions: {
+  //       args: [
+  //         '--use-fake-ui-for-media-stream',
+  //       ],
+  //     },
+  //   })
+  //   .build();
+  if (process.env.SAUCE_USERNAME !== undefined) {
+    client = new selenium.Builder()
+      .usingServer('http://' + process.env.SAUCE_USERNAME + ':' + process.env.SAUCE_ACCESS_KEY + '@ondemand.saucelabs.com:80/wd/hub')
+      .withCapabilities({
+        'tunnel-identifier': process.env.TRAVIS_JOB_NUMBER,
+        build: process.env.TRAVIS_BUILD_NUMBER,
+        username: process.env.SAUCE_USERNAME,
+        accessKey: process.env.SAUCE_ACCESS_KEY,
+        browserName: 'chrome',
+        chromeOptions: {
+          args: [
+            '--use-fake-ui-for-media-stream',
+          ],
+        },
+      }).build();
+  } else {
+    client = new selenium.Builder()
     .usingServer()
     .withCapabilities({
       browserName: 'chrome',
@@ -30,6 +58,7 @@ function createClient() {
       },
     })
     .build();
+  }
 
   return addColdBrewMethods(client);
 }
@@ -91,10 +120,10 @@ function addColdBrewMethods(client) {
         loggedEventNames = loggedEvents.map(event => event.type);
         // Handle the case where the user doesn't care if the events
         // happened in a certain order
-        
-        
+
+
         if (!inOrder) {
-          return events.every(eventName =>loggedEventNames.includes(eventName));
+          return events.every(eventName => loggedEventNames.includes(eventName));
         } else {
           return sameElementsInSameOrder(events, loggedEventNames);
         }
@@ -229,15 +258,15 @@ function addColdBrewMethods(client) {
     return client.wait(client.untilRecieveSignaling(events, options), timeout);
   };
 
-  client.untilDataChannelEvents = function(events, options = {}) {
+  client.untilDataChannelEvents = function (events, options = {}) {
     const { inOrder } = options;
     if (inOrder && typeof inOrder !== 'boolean') {
       throw new TypeError(
         `Invalid option passed into untilDataChannelEvents: inOrder: ${inOrder}`
       );
     }
-    return function() {
-      return client.executeScript(function(events, inOrder) {
+    return function () {
+      return client.executeScript(function (events, inOrder) {
         console.log(window.coldBrewData);
         if (!(window.coldBrewData && window.coldBrewData.RTCDataChannelEvents)) {
           return false;
@@ -250,7 +279,7 @@ function addColdBrewMethods(client) {
     }
   }
 
-  client.waitUntilDataChannelEvents = function(events, options, timeout) {
+  client.waitUntilDataChannelEvents = function (events, options, timeout) {
     return client.wait(client.untilDataChannelEvents(events, options), timeout);
   };
 
