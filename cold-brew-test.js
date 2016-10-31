@@ -31,7 +31,6 @@ function createClient() {
   //     },
   //   })
   //   .build();
-  console.log(process.env);
   if (process.env.SAUCE_USERNAME !== undefined) {
     client = new selenium.Builder()
       .usingServer('http://' + process.env.SAUCE_USERNAME + ':' + process.env.SAUCE_ACCESS_KEY + 'ondemand.saucelabs.com:80')
@@ -268,7 +267,6 @@ function addColdBrewMethods(client) {
     }
     return function () {
       return client.executeScript(function (events, inOrder) {
-        console.log(window.coldBrewData);
         if (!(window.coldBrewData && window.coldBrewData.RTCDataChannelEvents)) {
           return false;
         }

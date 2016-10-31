@@ -18,7 +18,7 @@ const { ColdBrewError } = coldBrew;
 const { resetNumClients } = require('./../example/chat/server.js');
 
 if (process.env.SAUCE_USERNAME) {
-  const ADDRESS = 'ondemand.saucelabs.com:80';
+  const ADDRESS = 'http://' + process.env.SAUCE_USERNAME + ':' + process.env.SAUCE_ACCESS_KEY + 'ondemand.saucelabs.com:80';
 } else {
   const ADDRESS = 'http://localhost:4444';
 }
