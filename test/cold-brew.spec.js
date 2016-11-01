@@ -183,7 +183,7 @@ describe('coldBrew', function () {
     });
 
     it('should be able to detect events for a specific peerConnection', function (done) {
-      this.timeout(5000);
+      this.timeout(10000);
 
       client1.get(ADDRESS);
       client2.get(ADDRESS);
@@ -355,7 +355,7 @@ describe('coldBrew', function () {
     });
 
     it('should detect that data channel events have occured', function(done) {
-      this.timeout(5000);
+      this.timeout(10000);
       
       client1.get(ADDRESS);
       client2.get(ADDRESS);

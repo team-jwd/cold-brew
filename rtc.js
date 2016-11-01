@@ -1,7 +1,42 @@
-'use strict';function _classCallCheck(instance,Constructor){if(!(instance instanceof Constructor))throw new TypeError('Cannot call a class as a function')}function _possibleConstructorReturn(self,call){if(!self)throw new ReferenceError('this hasn\'t been initialised - super() hasn\'t been called');return call&&('object'==typeof call||'function'==typeof call)?call:self}function _inherits(subClass,superClass){if('function'!=typeof superClass&&null!==superClass)throw new TypeError('Super expression must either be null or a function, not '+typeof superClass);subClass.prototype=Object.create(superClass&&superClass.prototype,{constructor:{value:subClass,enumerable:!1,writable:!0,configurable:!0}}),superClass&&(Object.setPrototypeOf?Object.setPrototypeOf(subClass,superClass):subClass.__proto__=superClass)}/* eslint no-undef: 0 *//* eslint no-unused-vars: 0 *//* eslint prefer-arrow-callback: 0 *//* eslint func-names: 0 *//* eslint no-use-before-define: 0 *//* eslint no-param-reassign: 0 *//* eslint no-shadow: 0 */if(window.coldBrewData)throw new ColdBrewError('Cannot capture RTC events, window.coldBrewData property already exists');// Attach a coldBrewData object to the window object to keep a record of the
+'use strict';
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+/* eslint no-undef: 0 */
+/* eslint no-unused-vars: 0 */
+/* eslint prefer-arrow-callback: 0 */
+/* eslint func-names: 0 */
+/* eslint no-use-before-define: 0 */
+/* eslint no-param-reassign: 0 */
+/* eslint no-shadow: 0 */
+
+if (window.coldBrewData) {
+  throw new ColdBrewError('Cannot capture RTC events, window.coldBrewData property already exists');
+}
+
+// Attach a coldBrewData object to the window object to keep a record of the
 // events that fire on the RTCPeerConnection object
-window.coldBrewData={RTCEvents:[],RTCDataChannelEvents:[],socketEvents:{outgoing:[],incoming:[]},peerConnections:{},sockets:{}};// An array of all of the events that fire on the RTCPeerConnection object
-var RTC_PEER_CONNECTION_EVENTS=['addstream','connectionstatechange','datachannel','icecandidate','iceconnectionstatechange','icegatheringstatechange','identityresult','idpassertionerror','idpvalidationerror','negotiationneeded','peeridentity','removestream','signalingstatechange','track'],RTC_DATA_CHANNEL_EVENTS=['bufferedamountlow','close','error','message','open'];/**
+window.coldBrewData = {
+  RTCEvents: [],
+  RTCDataChannelEvents: [],
+  socketEvents: {
+    outgoing: [],
+    incoming: []
+  },
+  peerConnections: {},
+  sockets: {}
+};
+
+// An array of all of the events that fire on the RTCPeerConnection object
+var RTC_PEER_CONNECTION_EVENTS = ['addstream', 'connectionstatechange', 'datachannel', 'icecandidate', 'iceconnectionstatechange', 'icegatheringstatechange', 'identityresult', 'idpassertionerror', 'idpvalidationerror', 'negotiationneeded', 'peeridentity', 'removestream', 'signalingstatechange', 'track'];
+
+var RTC_DATA_CHANNEL_EVENTS = ['bufferedamountlow', 'close', 'error', 'message', 'open'];
+
+/**
  * coldBrewRTC - Factory function that creates and returns an RTCPeerCOnnection
  * object. The RTCPeerConnection object's behavior is augmented to
  * enable it to push any events that fire on it into an array attached
@@ -11,12 +46,190 @@ var RTC_PEER_CONNECTION_EVENTS=['addstream','connectionstatechange','datachannel
  * @param  {type} options        description
  * @param  {type} coldBrewConfig description
  * @return {type}                description
- */function coldBrewRTC(a,b,c,d){if(c&&c.production)return new RTCPeerConnection(a,b);// setup config for RTCPeerConnection
-c=c||{};var f=c.listeners||RTC_PEER_CONNECTION_EVENTS,g=c.label||null;(function(k){var l=k.every(function(m){return RTC_PEER_CONNECTION_EVENTS.includes(m)});if(!l)throw new ColdBrewError('Invalid event names passed in to coldBrewRTC')})(f),d=d||{};var h=d.listeners||RTC_DATA_CHANNEL_EVENTS;(function(k){var l=k.every(function(m){return RTC_DATA_CHANNEL_EVENTS.includes(m)});if(!l)throw new ColdBrewError('Invalid data channel event names passed in to coldBrewRTC')})(h);// Create peer connection
-var i=new RTCPeerConnection(a,b);return function(k,l){var m=2<arguments.length&&void 0!==arguments[2]?arguments[2]:null;m&&(window.coldBrewData.peerConnections[m]=[]),l.forEach(function(n){k.addEventListener(n,function(o){window.coldBrewData.RTCEvents.push(o),m&&window.coldBrewData.peerConnections[m].push(o)})})}(i,f,g),function(k,l){var m=k.createDataChannel.bind(k);k.createDataChannel=function(){var o=m.apply(void 0,arguments);return l.forEach(function(p){o.addEventListener(p,function(q){window.coldBrewData.RTCDataChannelEvents.push(q)})}),o}}(i,h),function(k,l){Object.defineProperty(k,'ondatachannel',{set:function set(m){k.addEventListener('datachannel',function(n){var o=n.channel;l.forEach(function(p){o.addEventListener(p,function(q){window.coldBrewData.RTCDataChannelEvents.push(q)})}),m(n)})}})}(i,h),i}function observeSignaling(a){function c(f){return function(){// emit can be called with 1 to 3 arguments:
-// type
-// type, data
-// type, callback
-// type, data, callback
-// Therefore, we need to parse the arguments
-var h=0>=arguments.length?void 0:arguments[0],i=void 0,j=void 0;return(1>=arguments.length?void 0:arguments[1])&&('function'==typeof(1>=arguments.length?void 0:arguments[1])?j=1>=arguments.length?void 0:arguments[1]:i=1>=arguments.length?void 0:arguments[1]),(2>=arguments.length?void 0:arguments[2])&&'function'==typeof(2>=arguments.length?void 0:arguments[2])&&(j=2>=arguments.length?void 0:arguments[2]),window.coldBrewData.socketEvents.outgoing.push({type:h,data:i,callback:j}),f.emit.apply(f,arguments)}}function d(f){return function(g,h){f.on(g,function(){for(var _len=arguments.length,i=Array(_len),_key=0;_key<_len;_key++)i[_key]=arguments[_key];window.coldBrewData.socketEvents.incoming.push({type:g,data:i,callback:h}),h.apply(void 0,i)})}}var b=1<arguments.length&&void 0!==arguments[1]?arguments[1]:{};return!0===b.production?a:new Proxy(a,{get:function get(f,g,h){return'emit'===g?c(f):'on'===g?d(f):f[g]}})}var ColdBrewError=function(_Error){function ColdBrewError(){return _classCallCheck(this,ColdBrewError),_possibleConstructorReturn(this,_Error.apply(this,arguments))}return _inherits(ColdBrewError,_Error),ColdBrewError}(Error);'undefined'!=typeof module&&(module.exports={coldBrewRTC:coldBrewRTC,observeSignaling:observeSignaling,RTC_PEER_CONNECTION_EVENTS:RTC_PEER_CONNECTION_EVENTS,RTC_DATA_CHANNEL_EVENTS:RTC_DATA_CHANNEL_EVENTS});
+ */
+function coldBrewRTC(servers, options, coldBrewConfig, dataChannelConfig) {
+  if (coldBrewConfig && coldBrewConfig.production) {
+    return new RTCPeerConnection(servers, options);
+  }
+
+  // setup config for RTCPeerConnection
+  coldBrewConfig = coldBrewConfig || {};
+
+  var listeners = coldBrewConfig.listeners || RTC_PEER_CONNECTION_EVENTS;
+  var label = coldBrewConfig.label || null;
+  validateListeners(listeners);
+
+  // setup config for dataChannelConfig
+  dataChannelConfig = dataChannelConfig || {};
+
+  var dataListeners = dataChannelConfig.listeners || RTC_DATA_CHANNEL_EVENTS;
+  validateDataListeners(dataListeners);
+
+  // Create peer connection
+  var peerConnection = new RTCPeerConnection(servers, options);
+  addEventLogListeners(peerConnection, listeners, label);
+  addDataListenersOnChannelCreation(peerConnection, dataListeners);
+  addDataListenersOnDataChannelEvent(peerConnection, dataListeners);
+
+  return peerConnection;
+
+  function validateListeners(listeners) {
+    var valid = listeners.every(function (listener) {
+      return RTC_PEER_CONNECTION_EVENTS.includes(listener);
+    });
+
+    if (!valid) {
+      throw new ColdBrewError('Invalid event names passed in to coldBrewRTC');
+    }
+  }
+
+  function validateDataListeners(dataListeners) {
+    var valid = dataListeners.every(function (listener) {
+      return RTC_DATA_CHANNEL_EVENTS.includes(listener);
+    });
+
+    if (!valid) {
+      throw new ColdBrewError('Invalid data channel event names passed in to coldBrewRTC');
+    }
+  }
+
+  function addEventLogListeners(peerConnection, listeners) {
+    var label = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+
+    if (label) {
+      window.coldBrewData.peerConnections[label] = [];
+    }
+
+    listeners.forEach(function (listener) {
+      peerConnection.addEventListener(listener, function (event) {
+        window.coldBrewData.RTCEvents.push(event);
+        if (label) {
+          window.coldBrewData.peerConnections[label].push(event);
+        }
+      });
+    });
+  }
+
+  function addDataListenersOnChannelCreation(peerConnection, dataListeners) {
+    var createDataChannel = peerConnection.createDataChannel.bind(peerConnection);
+
+    peerConnection.createDataChannel = function () {
+      var newDataChannel = createDataChannel.apply(undefined, arguments);
+      dataListeners.forEach(function (listener) {
+        newDataChannel.addEventListener(listener, function (event) {
+          window.coldBrewData.RTCDataChannelEvents.push(event);
+        });
+      });
+
+      return newDataChannel;
+    };
+  }
+
+  function addDataListenersOnDataChannelEvent(peerConnection, dataListeners) {
+    Object.defineProperty(peerConnection, 'ondatachannel', {
+      set: function set(func) {
+        peerConnection.addEventListener('datachannel', function (e) {
+          var datachannel = e.channel;
+          dataListeners.forEach(function (listener) {
+            datachannel.addEventListener(listener, function (event) {
+              window.coldBrewData.RTCDataChannelEvents.push(event);
+            });
+          });
+
+          func(e);
+        });
+      }
+    });
+  }
+}
+
+function observeSignaling(socket) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+  if (options.production === true) return socket;
+
+  return new Proxy(socket, {
+    get: function get(target, key, receiver) {
+      switch (key) {
+        case 'emit':
+          return emitAndLog(target);
+
+        case 'on':
+          return logOnReceipt(target);
+
+        default:
+          return target[key];
+      }
+    }
+  });
+
+  function emitAndLog(target) {
+    return function () {
+      // emit can be called with 1 to 3 arguments:
+      // type
+      // type, data
+      // type, callback
+      // type, data, callback
+      // Therefore, we need to parse the arguments
+      var type = arguments.length <= 0 ? undefined : arguments[0];
+
+      var data = void 0;
+      var callback = void 0;
+
+      if (arguments.length <= 1 ? undefined : arguments[1]) {
+        if (typeof (arguments.length <= 1 ? undefined : arguments[1]) === 'function') callback = arguments.length <= 1 ? undefined : arguments[1];else data = arguments.length <= 1 ? undefined : arguments[1];
+      }
+
+      if (arguments.length <= 2 ? undefined : arguments[2]) {
+        if (typeof (arguments.length <= 2 ? undefined : arguments[2]) === 'function') callback = arguments.length <= 2 ? undefined : arguments[2];
+      }
+
+      window.coldBrewData.socketEvents.outgoing.push({
+        type: type,
+        data: data,
+        callback: callback
+      });
+
+      return target.emit.apply(target, arguments);
+    };
+  }
+
+  function logOnReceipt(target) {
+    return function (type, callback) {
+      target.on(type, function () {
+        for (var _len = arguments.length, data = Array(_len), _key = 0; _key < _len; _key++) {
+          data[_key] = arguments[_key];
+        }
+
+        window.coldBrewData.socketEvents.incoming.push({
+          type: type,
+          data: data,
+          callback: callback
+        });
+
+        callback.apply(undefined, data);
+      });
+    };
+  }
+}
+
+var ColdBrewError = function (_Error) {
+  _inherits(ColdBrewError, _Error);
+
+  function ColdBrewError() {
+    _classCallCheck(this, ColdBrewError);
+
+    return _possibleConstructorReturn(this, (ColdBrewError.__proto__ || Object.getPrototypeOf(ColdBrewError)).apply(this, arguments));
+  }
+
+  return ColdBrewError;
+}(Error);
+
+if (typeof module !== 'undefined') {
+  module.exports = {
+    coldBrewRTC: coldBrewRTC,
+    observeSignaling: observeSignaling,
+    RTC_PEER_CONNECTION_EVENTS: RTC_PEER_CONNECTION_EVENTS,
+    RTC_DATA_CHANNEL_EVENTS: RTC_DATA_CHANNEL_EVENTS
+  };
+}
