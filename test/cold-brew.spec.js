@@ -2,7 +2,7 @@
 /* eslint no-unused-vars: 0 */
 /* eslint prefer-arrow-callback: 0 */
 /* eslint func-names: 0 */
-
+'use strict';
 
 /*
  * Testing all testing functions we have written on an
