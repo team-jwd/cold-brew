@@ -1,10 +1,10 @@
 {
   "name": "cold-brew",
-  "version": "1.0.31",
+  "version": "1.0.33",
   "description": "A testing module for TDD with apps that use the RTCPeerConnection API",
   "main": "cold-brew-test.js",
   "scripts": {
-    "test": "mocha test/*.spec.js",
+    "test": "./node_modules/mocha/bin/mocha test/*.spec.js",
     "generate-docs": "./node_modules/.bin/jsdoc ./cold-brew-test.js -d ./docs"
   },
   "keywords": [
@@ -22,7 +22,15 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
-    "jsdoc": "^3.4.2"
+    "express": "^4.14.0",
+    "jquery": "^3.1.1",
+    "jsdoc": "^3.4.2",
+    "jwt-decode": "^2.1.0",
+    "mocha": "^3.1.2",
+    "selenium-webdriver": "^3.0.0-beta-3",
+    "socket.io": "^1.5.0",
+    "socket.io-client": "^1.5.0",
+    "webrtc-adapter": "^2.0.4"
   },
   "homepage": "https://github.com/team-jwd/cold-brew",
   "bugs": {
