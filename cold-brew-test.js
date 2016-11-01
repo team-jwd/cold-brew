@@ -5,7 +5,7 @@
 /* eslint prefer-arrow-callback: 0 */
 /* eslint func-names: 0 */
 /* eslint no-shadow: 0 */
-
+'use strict';
 const selenium = require('selenium-webdriver');
 
 const { By } = selenium;
@@ -31,6 +31,7 @@ function createClient() {
   //     },
   //   })
   //   .build();
+
   if (process.env.SAUCE_USERNAME !== undefined) {
     client = new selenium.Builder()
       .usingServer('http://' + process.env.SAUCE_USERNAME + ':' + process.env.SAUCE_ACCESS_KEY + '@ondemand.saucelabs.com:80/wd/hub')
