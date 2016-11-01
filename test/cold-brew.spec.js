@@ -2,7 +2,7 @@
 /* eslint no-unused-vars: 0 */
 /* eslint prefer-arrow-callback: 0 */
 /* eslint func-names: 0 */
-
+'use strict';
 
 /*
  * Testing all testing functions we have written on an
@@ -11,12 +11,14 @@
  */
 const expect = require('chai').expect;
 const coldBrew = require('../cold-brew-test');
+const jwtDecode = require('jwt-decode');
 
 const { ColdBrewError } = coldBrew;
 
 const { resetNumClients } = require('./../example/chat/server.js');
 
-const ADDRESS = 'http://localhost:3000';
+const ADDRESS = 'http://localhost:4444';
+
 describe('coldBrew', function () {
   beforeEach(function () {
     resetNumClients(0);
@@ -26,14 +28,13 @@ describe('coldBrew', function () {
     let client;
 
     before(function () {
-      this.timeout(5000);
+      this.timeout(100000);
       client = coldBrew.createClient();
     });
 
 
     it('should be able to locate an element by its attribute', function (done) {
-      this.timeout(10000);
-
+      this.timeout(100000);
       client.get(ADDRESS);
       client.findElementByAttributes('input', {
         placeholder: 'Type a message...',
@@ -43,7 +44,7 @@ describe('coldBrew', function () {
 
 
     it('should not be able to locate an element that doesn\'t exist', function (done) {
-      this.timeout(10000);
+      this.timeout(100000);
 
       client.get(ADDRESS);
       client.findElementByAttributes('span', {
@@ -63,14 +64,14 @@ describe('coldBrew', function () {
     let client;
 
     before(function () {
-      this.timeout(5000);
+      this.timeout(100000);
       client = coldBrew.createClient();
     });
 
 
 
     it('should be able to perform multiple navigation events', function (done) {
-      this.timeout(10000);
+      this.timeout(100000);
 
       client.get(ADDRESS);
       client.do([
@@ -82,7 +83,7 @@ describe('coldBrew', function () {
     });
 
     it('should throw an error if any of the navigation events have an invalid action', function () {
-      this.timeout(10000);
+      this.timeout(100000);
 
       client.get(ADDRESS);
       try {
@@ -97,7 +98,7 @@ describe('coldBrew', function () {
     });
 
     it('should reject with TypeError if the element cannot be located', function (done) {
-      this.timeout(10000);
+      this.timeout(100000);
 
       client.get(ADDRESS);
       client.do([
@@ -109,7 +110,7 @@ describe('coldBrew', function () {
     });
 
     it('should reject with TypeError if any of the elements cannot be located', function (done) {
-      this.timeout(5000);
+      this.timeout(100000);
 
       client.get(ADDRESS);
       client.do([
@@ -138,7 +139,7 @@ describe('coldBrew', function () {
     });
 
     it('should detect that certain RTC events have occurred', function (done) {
-      this.timeout(10000);
+      this.timeout(100000);
 
       client1.get(ADDRESS);
       client2.get(ADDRESS);
@@ -151,7 +152,7 @@ describe('coldBrew', function () {
     });
 
     it('should detect that RTC events have occurred in a certain order', function (done) {
-      this.timeout(30000);
+      this.timeout(100000);
 
       client1.get(ADDRESS);
       client2.get(ADDRESS);
@@ -165,7 +166,7 @@ describe('coldBrew', function () {
     });
 
     it('should not be able to detect an event that has not occurred', function (done) {
-      this.timeout(10000);
+      this.timeout(100000);
 
       client1.get(ADDRESS);
       client2.get(ADDRESS);
@@ -173,7 +174,7 @@ describe('coldBrew', function () {
       client1.waitUntilRTCEvents([
         'thiseventshouldnotexist',
         'orthisone',
-      ], {}, 3000)
+      ], {}, 90000)
         .then((occurred) => {
           if (occurred) {
             done(new Error('waitUntilRTCEvents reported that a non-existent event occurred'));
@@ -202,7 +203,7 @@ describe('coldBrew', function () {
     });
 
     it('should not be able to detect events for a peerConnection that doesn\'t exist', function (done) {
-      this.timeout(10000);
+      this.timeout(100000);
 
       client1.get(ADDRESS);
       client2.get(ADDRESS);
@@ -213,7 +214,7 @@ describe('coldBrew', function () {
       ], {
           inOrder: true,
           label: 'thisdoesnotexist'
-      }, 5000).then((occurred) => {
+      }, 90000).then((occurred) => {
         if (occurred) {
           done(new Error('an event was detected when none should have been'));
         }
@@ -238,7 +239,7 @@ describe('coldBrew', function () {
     });
 
     it('should be able to detect that signaling events have occurred', function (done) {
-      this.timeout(10000);
+      this.timeout(100000);
 
       client1.get(ADDRESS);
       client2.get(ADDRESS);
@@ -249,14 +250,14 @@ describe('coldBrew', function () {
     });
 
     it('should not be able to detect events that have not happened', function (done) {
-      this.timeout(10000);
+      this.timeout(100000);
 
       client1.get(ADDRESS);
       client2.get(ADDRESS);
 
       client1.waitUntilSendSignaling([
         'thiseventshouldnotexist',
-      ], {}, 3000)
+      ], {}, 90000)
         .then((occurred) => {
           if (occurred) {
             done(new Error('waitUntilSendSignaling detected nonexistant event'));
@@ -268,7 +269,7 @@ describe('coldBrew', function () {
     });
 
     it('should detect that Socket events emitted in a certain order', function (done) {
-      this.timeout(30000);
+      this.timeout(100000);
 
       client1.get(ADDRESS);
       client2.get(ADDRESS);
@@ -295,7 +296,7 @@ describe('coldBrew', function () {
     });
 
     it('should succeed when looking for an event that exists', function (done) {
-      this.timeout(10000);
+      this.timeout(100000);
       client1.get(ADDRESS);
       client2.get(ADDRESS);
 
@@ -310,7 +311,7 @@ describe('coldBrew', function () {
     });
 
     it('should reject when looking for an event that does not exist', function (done) {
-      this.timeout(10000);
+      this.timeout(100000);
       client1.get(ADDRESS);
       client2.get(ADDRESS);
 
@@ -327,7 +328,7 @@ describe('coldBrew', function () {
     });
 
     it('should detect that Socket events have been recieved in a certain order', function (done) {
-      this.timeout(30000);
+      this.timeout(100000);
 
       client1.get(ADDRESS);
       client2.get(ADDRESS);
