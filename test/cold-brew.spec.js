@@ -10,7 +10,7 @@
  * *** Need to write tests for data channel events ***
  */
 const expect = require('chai').expect;
-const coldBrew = require('../cold-brew-test');
+const coldBrew = require('../src/cold-brew-test');
 const jwtDecode = require('jwt-decode');
 
 const { ColdBrewError } = coldBrew;
