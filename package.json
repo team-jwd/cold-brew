@@ -1,8 +1,8 @@
 {
   "name": "cold-brew",
-  "version": "1.0.35",
+  "version": "1.0.36",
   "description": "A testing module for TDD with apps that use the RTCPeerConnection API",
-  "main": "cold-brew-test.js",
+  "main": "src/cold-brew-test.js",
   "scripts": {
     "test": "mocha test/*.spec.js",
     "generate-docs": "./node_modules/.bin/jsdoc ./cold-brew-test.js -d ./docs",
