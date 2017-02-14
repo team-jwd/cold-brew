@@ -7,7 +7,7 @@
     "test": "mocha test/*.spec.js",
     "generate-docs": "./node_modules/.bin/jsdoc ./cold-brew-test.js -d ./docs",
     "bundle-client:watch": "./node_modules/gulp/bin/gulp.js",
-    "coverage": "istanbul cover ./test.js",
+    "coverage": "istanbul cover test/*.spec.js",
   },
   "keywords": [
     "testing",
