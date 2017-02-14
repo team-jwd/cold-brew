@@ -7,7 +7,7 @@
     "test": "mocha test/*.spec.js",
     "generate-docs": "./node_modules/.bin/jsdoc ./cold-brew-test.js -d ./docs",
     "bundle-client:watch": "./node_modules/gulp/bin/gulp.js",
-    "coverage": "istanbul cover test/*.spec.js",
+    "coverage": "istanbul cover node_modules/.bin/_mocha -- -- test/*"
   },
   "keywords": [
     "testing",
@@ -39,7 +39,7 @@
     "jquery": "^3.1.1",
     "jsdoc": "^3.4.2",
     "jwt-decode": "^2.1.0",
-    "mocha": "^3.1.2",
+    "mocha": "^3.2.0",
     "selenium-webdriver": "^3.0.0-beta-3",
     "socket.io": "^1.5.0",
     "socket.io-client": "^1.5.0",
