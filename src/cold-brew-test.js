@@ -361,7 +361,7 @@ function addColdBrewMethods(client) {
 
   function validNavigation(navigationEvent) {
     return Array.isArray(navigationEvent) &&
-      ['click', 'sendKeys'].includes(navigationEvent[0]);
+      ['click', 'sendKeys'].indexOf(navigationEvent[0]) > -1;
   }
 
 
